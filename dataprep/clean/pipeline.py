@@ -110,10 +110,13 @@ class Pipeline:
         temp_test_df = test_df
         self.is_num_type = True
         for _, value in temp_training_df.iteritems():
-            if isinstance(value, str):
-                if not value.isnumeric() and not value in NULL_VALUES:
-                    self.is_num_type = False
-                    break
+            if (
+                isinstance(value, str)
+                and not value.isnumeric()
+                and value not in NULL_VALUES
+            ):
+                self.is_num_type = False
+                break
         if not self.is_num_type:
             for i in range(len(self.cat_pipe_with_ops)):
                 temp_training_df, temp_test_df = self.cat_pipe_with_ops[i].fit_transform(
@@ -137,12 +140,11 @@ class Pipeline:
             including the arrangement of components, name of operators
             and other information should be provided, such as filling value for imputation.
         """
-        result = []
-        for component in self.cat_pipeline:
-            if cat_pipe_info[component] is None:
-                continue
-            result.append(component_dic[component](cat_pipe_info))
-        return result
+        return [
+            component_dic[component](cat_pipe_info)
+            for component in self.cat_pipeline
+            if cat_pipe_info[component] is not None
+        ]
 
     def generate_num_pipe(self, num_pipe_info: Dict[str, Any]) -> Any:
         """
@@ -155,9 +157,8 @@ class Pipeline:
             including the arrangement of components, name of operators
             and other information should be provided, such as filling value for imputation.
         """
-        result = []
-        for component in self.num_pipeline:
-            if num_pipe_info[component] is None:
-                continue
-            result.append(component_dic[component](num_pipe_info))
-        return result
+        return [
+            component_dic[component](num_pipe_info)
+            for component in self.num_pipeline
+            if num_pipe_info[component] is not None
+        ]

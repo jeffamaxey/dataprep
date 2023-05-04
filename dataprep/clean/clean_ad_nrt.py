@@ -133,10 +133,7 @@ def validate_ad_nrt(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nrt.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nrt.is_valid)
-        else:
-            return df.applymap(nrt.is_valid)
+        return df[column].apply(nrt.is_valid) if column else df.applymap(nrt.is_valid)
     return nrt.is_valid(df)
 
 
@@ -166,6 +163,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [nrt.compact(val)] + result
-
-    return result
+    return [nrt.compact(val)] + result

@@ -83,8 +83,7 @@ class Container:
         """
         Display itself inside a notebook
         """
-        output_html = self.template_base.render(context=self.context)
-        return output_html
+        return self.template_base.render(context=self.context)
 
     def show(self) -> None:
         """
@@ -158,10 +157,7 @@ class Context:
                 setattr(self, attr, value)
 
     def __getitem__(self, key: str) -> Any:
-        if hasattr(self, key):
-            return getattr(self, key)
-        else:
-            return None
+        return getattr(self, key) if hasattr(self, key) else None
 
     def __getattr__(self, attr: str) -> None:
         return None

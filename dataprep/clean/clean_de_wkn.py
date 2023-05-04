@@ -126,10 +126,7 @@ def validate_de_wkn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(wkn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(wkn.is_valid)
-        else:
-            return df.applymap(wkn.is_valid)
+        return df[column].apply(wkn.is_valid) if column else df.applymap(wkn.is_valid)
     return wkn.is_valid(df)
 
 

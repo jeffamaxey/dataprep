@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_lat_long_column() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_lat_long": [
                 (41.5, -81.0),
@@ -33,18 +33,16 @@ def df_lat_long_column() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_separate_lat_long_columns() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_lat": ["30° E", "41° 30′ N", "41 S", "80", "hello", "NA"],
             "messy_long": ["30° E", "41° 30′ N", "41 W", "80", "hello", "NA"],
         }
     )
-    return df
 
 
 def test_clean_default(df_lat_long_column: pd.DataFrame) -> None:

@@ -141,10 +141,7 @@ def validate_lei(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(lei.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(lei.is_valid)
-        else:
-            return df.applymap(lei.is_valid)
+        return df[column].apply(lei.is_valid) if column else df.applymap(lei.is_valid)
     return lei.is_valid(df)
 
 
@@ -166,24 +163,14 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_lei(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
         error_result = val if errors == "ignore" else np.nan
-        if split:
-            return [error_result, np.nan, np.nan, np.nan]
-        else:
-            return [error_result]
-
+        return [error_result, np.nan, np.nan, np.nan] if split else [error_result]
     if split:
         compacted_val = lei.compact(val)
         result = [compacted_val[:4], compacted_val[6:18], compacted_val[18:]]
 
-    result = [lei.compact(val)] + result
-
-    return result
+    return [lei.compact(val)] + result

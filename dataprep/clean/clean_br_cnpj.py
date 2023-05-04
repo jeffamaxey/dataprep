@@ -124,10 +124,11 @@ def validate_br_cnpj(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cnpj.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cnpj.is_valid)
-        else:
-            return df.applymap(cnpj.is_valid)
+        return (
+            df[column].apply(cnpj.is_valid)
+            if column
+            else df.applymap(cnpj.is_valid)
+        )
     return cnpj.is_valid(df)
 
 

@@ -126,10 +126,7 @@ def validate_cu_ni(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ni.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ni.is_valid)
-        else:
-            return df.applymap(ni.is_valid)
+        return df[column].apply(ni.is_valid) if column else df.applymap(ni.is_valid)
     return ni.is_valid(df)
 
 

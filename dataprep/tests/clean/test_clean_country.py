@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_countries() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_country": [
                 "Canada",
@@ -39,12 +39,11 @@ def df_countries() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_typo_countries() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_country": [
                 "canada",
@@ -63,7 +62,6 @@ def df_typo_countries() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_countries: pd.DataFrame) -> None:

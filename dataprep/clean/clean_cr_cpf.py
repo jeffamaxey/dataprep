@@ -122,10 +122,7 @@ def validate_cr_cpf(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cpf.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cpf.is_valid)
-        else:
-            return df.applymap(cpf.is_valid)
+        return df[column].apply(cpf.is_valid) if column else df.applymap(cpf.is_valid)
     return cpf.is_valid(df)
 
 

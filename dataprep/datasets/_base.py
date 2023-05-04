@@ -24,10 +24,7 @@ def get_dataset_names() -> List[str]:
     files = os.listdir(f"{module_path}/data")
     csv_files = list(filter(lambda x: x.endswith(".csv"), files))
 
-    # remove suffix csv and get dataset names
-    datasets = list(map(lambda f: os.path.splitext(f)[0], csv_files))
-
-    return datasets
+    return list(map(lambda f: os.path.splitext(f)[0], csv_files))
 
 
 def _get_dataset_path(name: str) -> str:
@@ -76,8 +73,7 @@ def load_dataset(name: str) -> pd.DataFrame:
     ['iris', 'titanic', 'adult', 'house_prices_train', 'house_prices_test']
     """
     path = _get_dataset_path(name)
-    df = pd.read_csv(path)
-    return df
+    return pd.read_csv(path)
 
 
 def load_db(file_name: str) -> Engine:
@@ -97,8 +93,7 @@ def load_db(file_name: str) -> Engine:
     db_file_path = str(
         os.path.join(os.path.dirname(os.path.abspath(__file__)), "database", file_name)
     )
-    db_engine = create_engine(f"sqlite:///{db_file_path}")
-    return db_engine
+    return create_engine(f"sqlite:///{db_file_path}")
 
 
 def _load_dataset_as_dask(name: str) -> dd.DataFrame:
@@ -106,5 +101,4 @@ def _load_dataset_as_dask(name: str) -> dd.DataFrame:
     Return a dask dataframe from dd.read_csv. Used for testing.
     """
     path = _get_dataset_path(name)
-    ddf = dd.read_csv(path)
-    return ddf
+    return dd.read_csv(path)

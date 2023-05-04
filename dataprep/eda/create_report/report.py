@@ -59,11 +59,7 @@ class Report:
             posix_path = Path(path).expanduser()
 
             if posix_path.is_dir():
-                if path.endswith("/"):
-                    path += "report.html"
-                else:
-                    path += "/report.html"
-
+                path += "report.html" if path.endswith("/") else "/report.html"
             elif extension:
                 if extension != ".html":
                     raise ValueError(
@@ -73,11 +69,9 @@ class Report:
             else:
                 path += ".html"
 
-            saved_file_path = Path(path).expanduser()
-
         else:
-            path = str(Path.cwd()) + "/report.html"
-            saved_file_path = Path(path).expanduser()
+            path = f"{str(Path.cwd())}/report.html"
+        saved_file_path = Path(path).expanduser()
 
         with open(saved_file_path, "w", encoding="utf-8") as file:
             file.write(self.report)

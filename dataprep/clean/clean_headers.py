@@ -83,7 +83,7 @@ def clean_headers(
     """
     if case not in CASE_STYLES:
         raise ValueError(
-            f"case {case} is invalid, it needs to be one of {', '.join(c for c in CASE_STYLES)}"
+            f"case {case} is invalid, it needs to be one of {', '.join(CASE_STYLES)}"
         )
 
     # Store original column names for creating cleaning report
@@ -203,10 +203,11 @@ def _remove_accents(name: Any) -> Any:
     Return the normal form for a Unicode string name using canonical
     decomposition.
     """
-    if not isinstance(name, str):
-        return name
-
-    return normalize("NFD", name).encode("ascii", "ignore").decode("ascii")
+    return (
+        normalize("NFD", name).encode("ascii", "ignore").decode("ascii")
+        if isinstance(name, str)
+        else name
+    )
 
 
 def _rename_duplicates(names: pd.Index, case: str) -> Any:

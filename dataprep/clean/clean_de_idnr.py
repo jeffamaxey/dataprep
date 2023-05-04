@@ -122,10 +122,11 @@ def validate_de_idnr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(idnr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(idnr.is_valid)
-        else:
-            return df.applymap(idnr.is_valid)
+        return (
+            df[column].apply(idnr.is_valid)
+            if column
+            else df.applymap(idnr.is_valid)
+        )
     return idnr.is_valid(df)
 
 

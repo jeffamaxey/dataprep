@@ -126,10 +126,11 @@ def validate_mx_curp(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(curp.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(curp.is_valid)
-        else:
-            return df.applymap(curp.is_valid)
+        return (
+            df[column].apply(curp.is_valid)
+            if column
+            else df.applymap(curp.is_valid)
+        )
     return curp.is_valid(df)
 
 

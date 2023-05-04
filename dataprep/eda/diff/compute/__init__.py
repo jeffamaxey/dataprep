@@ -51,32 +51,29 @@ def compute_diff(
     elif not cfg:
         cfg = Config()
 
-    if isinstance(df, list):
-
-        if len(df) < 2:
-            raise DataprepError("plot_diff needs at least 2 DataFrames.")
-        if len(df) > 5:
-            raise DataprepError("Too many DataFrames, max: 5.")
-        label = cfg.diff.label
-        if not label:
-            cfg.diff.label = [f"df{i+1}" for i in range(len(df))]
-        elif len(df) != len(label):
-            raise ValueError("Number of the given label doesn't match the number of DataFrames.")
-
-        if cfg.diff.baseline > len(df) - 1:
-            raise ValueError("Baseline is out of the boundary of the input.")
-
-        df_list = list(map(to_dask, df))
-        for i, _ in enumerate(df_list):
-            df_list[i].columns = df_list[i].columns.astype(str)
-
-        if x:
-            if [col for dfs in df for col in dfs.columns].count(x) < 2:
-                raise DataprepError("x must exist in at least two DataFrames")
-            # return compare_multiple_on_column(df_list, x)
-            return compare_multiple_col(df_list, x, cfg)  # type: ignore
-        else:
-            return compare_multiple_df(df_list, cfg, dtype)  # type: ignore
-
-    else:
+    if not isinstance(df, list):
         raise TypeError(f"Invalid input type: {type(df)}")
+    if len(df) < 2:
+        raise DataprepError("plot_diff needs at least 2 DataFrames.")
+    if len(df) > 5:
+        raise DataprepError("Too many DataFrames, max: 5.")
+    label = cfg.diff.label
+    if not label:
+        cfg.diff.label = [f"df{i+1}" for i in range(len(df))]
+    elif len(df) != len(label):
+        raise ValueError("Number of the given label doesn't match the number of DataFrames.")
+
+    if cfg.diff.baseline > len(df) - 1:
+        raise ValueError("Baseline is out of the boundary of the input.")
+
+    df_list = list(map(to_dask, df))
+    for i, _ in enumerate(df_list):
+        df_list[i].columns = df_list[i].columns.astype(str)
+
+    if not x:
+        return compare_multiple_df(df_list, cfg, dtype)  # type: ignore
+
+    if [col for dfs in df for col in dfs.columns].count(x) < 2:
+        raise DataprepError("x must exist in at least two DataFrames")
+    # return compare_multiple_on_column(df_list, x)
+    return compare_multiple_col(df_list, x, cfg)  # type: ignore

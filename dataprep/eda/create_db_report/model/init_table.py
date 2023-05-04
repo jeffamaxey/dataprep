@@ -69,9 +69,7 @@ class Table:
         return False
 
     def getType(self):
-        if self.is_view() == True:
-            return "View"
-        return "Table"
+        return "View" if self.is_view() == True else "Table"
 
     def getColumn(self, colName: str):
         return self.columns[colName]

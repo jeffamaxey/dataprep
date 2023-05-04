@@ -138,8 +138,6 @@ def format_basic(df_list: List[pd.DataFrame], cfg: Config) -> Dict[str, Any]:
     final_results: Dict[str, Any] = {"dfs": []}
     delayed_results: List[Any] = []
     figs_var: List[Figure] = []
-    dask_results = {}
-
     for df in df_list:
         df = EDAFrame(df)
         setattr(getattr(cfg, "plot"), "report", True)
@@ -160,9 +158,7 @@ def format_basic(df_list: List[pd.DataFrame], cfg: Config) -> Dict[str, Any]:
 
     res_plots = dask.delayed(_format_plots)(cfg=cfg, df_list=df_list)
 
-    dask_results["df_computations"] = delayed_results
-    dask_results["plots"] = res_plots
-
+    dask_results = {"df_computations": delayed_results, "plots": res_plots}
     dask_results = dask.compute(dask_results)
 
     for df, data in zip(df_list, dask_results[0]["df_computations"]):  # type: ignore
@@ -243,18 +239,13 @@ def compute_plot_data(
     for col in uniq_cols:
         srs = Srs(aligned_dfs[col])
         col_dtype = srs.self_map(detect_dtype, known_dtype=dtype)
-        if len(col_dtype) > 1:
-            col_dtype = col_dtype[baseline]
-        else:
-            col_dtype = col_dtype[0]
-
+        col_dtype = col_dtype[baseline] if len(col_dtype) > 1 else col_dtype[0]
         orig = [src for src, seq in labeled_cols.items() if col in seq]
 
         if is_dtype(col_dtype, Continuous_v1()):
             data.append((col, Continuous_v1(), diff_cont_calcs(srs.apply("dropna"), cfg), orig))
         elif is_dtype(col_dtype, Nominal_v1()):
-            is_int = _is_all_int(df_list, col)
-            if is_int:
+            if is_int := _is_all_int(df_list, col):
                 norm_srs = srs.apply("dropna").apply(
                     "apply", lambda x: str(round(x)), meta=(col, "object")
                 )

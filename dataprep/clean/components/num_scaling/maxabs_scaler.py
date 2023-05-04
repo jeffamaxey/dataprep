@@ -46,8 +46,7 @@ class MaxAbsScaler:
             Provided data column.
         """
 
-        result = col_df.map(self.compute_val)
-        return result
+        return col_df.map(self.compute_val)
 
     def fit_transform(self, col_df: dd.Series) -> dd.Series:
         """

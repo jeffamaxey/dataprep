@@ -123,10 +123,11 @@ def validate_hu_anum(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(anum.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(anum.is_valid)
-        else:
-            return df.applymap(anum.is_valid)
+        return (
+            df[column].apply(anum.is_valid)
+            if column
+            else df.applymap(anum.is_valid)
+        )
     return anum.is_valid(df)
 
 

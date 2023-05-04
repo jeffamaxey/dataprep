@@ -123,10 +123,7 @@ def validate_pt_nif(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nif.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nif.is_valid)
-        else:
-            return df.applymap(nif.is_valid)
+        return df[column].apply(nif.is_valid) if column else df.applymap(nif.is_valid)
     return nif.is_valid(df)
 
 

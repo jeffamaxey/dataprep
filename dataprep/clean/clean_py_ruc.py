@@ -122,10 +122,7 @@ def validate_py_ruc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ruc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ruc.is_valid)
-        else:
-            return df.applymap(ruc.is_valid)
+        return df[column].apply(ruc.is_valid) if column else df.applymap(ruc.is_valid)
     return ruc.is_valid(df)
 
 

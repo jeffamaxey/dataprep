@@ -66,7 +66,7 @@ class TableColumn:
         return self.comments
 
     def setComments(self, comments: str):
-        if comments is None or len(comments.strip()) == 0:
+        if comments is None or not comments.strip():
             self.comments = None
         else:
             self.comments = comments.strip()

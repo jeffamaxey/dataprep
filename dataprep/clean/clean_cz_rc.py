@@ -122,10 +122,7 @@ def validate_cz_rc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(rc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(rc.is_valid)
-        else:
-            return df.applymap(rc.is_valid)
+        return df[column].apply(rc.is_valid) if column else df.applymap(rc.is_valid)
     return rc.is_valid(df)
 
 

@@ -641,7 +641,7 @@ def getInitSheet() -> Any:
         origin_df = index_df.copy(deep=True)
         global tmp_dir
         ts = time.time()
-        df_file = path.join(tmp_dir, f"df_{str(int(ts))}.pkl").replace("\\", "/")
+        df_file = path.join(tmp_dir, f"df_{int(ts)}.pkl").replace("\\", "/")
         origin_df.to_pickle(df_file)
         global ts_list
         global ts_point
@@ -652,16 +652,10 @@ def getInitSheet() -> Any:
     col_names = index_df.columns.values.tolist()
     table_columns = []
     for col_name in col_names:
-        temp_dic = {}
-        temp_dic["colName"] = col_name
-        temp_dic["colLabel"] = col_name
-        temp_dic["colWidth"] = 180
+        temp_dic = {"colName": col_name, "colLabel": col_name, "colWidth": 180}
         table_columns.append(temp_dic)
     transposed_json = index_df.T.to_dict()
-    table_data = []
-    for key in transposed_json:
-        table_data.append(transposed_json[key])
-
+    table_data = [transposed_json[key] for key in transposed_json]
     return {"tableData": table_data, "tableColumns": table_columns}
 
 
@@ -684,15 +678,10 @@ def getUploadedFile() -> Any:
     col_names = index_df.columns.values.tolist()
     table_columns = []
     for col_name in col_names:
-        temp_dic = {}
-        temp_dic["colName"] = col_name
-        temp_dic["colLabel"] = col_name
-        temp_dic["colWidth"] = 180
+        temp_dic = {"colName": col_name, "colLabel": col_name, "colWidth": 180}
         table_columns.append(temp_dic)
     transposed_json = index_df.T.to_dict()
-    table_data = []
-    for key in transposed_json:
-        table_data.append(transposed_json[key])
+    table_data = [transposed_json[key] for key in transposed_json]
     return {"tableData": table_data, "tableColumns": table_columns}
 
 
@@ -721,20 +710,15 @@ def cleanWholeDF() -> Any:
     table_columns = []
 
     for col_name in col_names:
-        temp_dic = {}
-        temp_dic["colName"] = col_name
-        temp_dic["colLabel"] = col_name
-        temp_dic["colWidth"] = 180
+        temp_dic = {"colName": col_name, "colLabel": col_name, "colWidth": 180}
         table_columns.append(temp_dic)
     transposed_json = df_cleaned.T.to_dict()
-    table_data = []
-    for key in transposed_json:
-        table_data.append(transposed_json[key])
+    table_data = [transposed_json[key] for key in transposed_json]
     index_df = df_cleaned
 
     global tmp_dir
     ts = time.time()
-    df_file = path.join(tmp_dir, f"df_{str(int(ts))}.pkl").replace("\\", "/")
+    df_file = path.join(tmp_dir, f"df_{int(ts)}.pkl").replace("\\", "/")
     index_df.to_pickle(df_file)
     global ts_list
     global ts_point

@@ -143,10 +143,11 @@ def validate_ismn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ismn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ismn.is_valid)
-        else:
-            return df.applymap(ismn.is_valid)
+        return (
+            df[column].apply(ismn.is_valid)
+            if column
+            else df.applymap(ismn.is_valid)
+        )
     return ismn.is_valid(df)
 
 
@@ -168,11 +169,7 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_ismn(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
@@ -184,7 +181,7 @@ def _format(
 
     if split:
         result = list(ismn.split(ismn.to_ismn13(val)))
-        if len(result) == 0:
+        if not result:
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
     if output_format == "compact":
         result = [ismn.compact(val)] + result

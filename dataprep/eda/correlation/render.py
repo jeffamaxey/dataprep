@@ -231,8 +231,7 @@ def render_correlation_heatmaps(itmdt: Intermediate, plot_width: int, plot_heigh
         tab = Panel(child=fig, title=method)
         tabs.append(tab)
 
-    tabs = Tabs(tabs=tabs)
-    return tabs
+    return Tabs(tabs=tabs)
 
 
 def render_correlation_single_heatmaps(
@@ -490,10 +489,11 @@ def render_crossfilter(
         ),
     )
 
-    interaction_fig = column(
-        row(x_select, y_select, align="center"), fig_all_in_one, sizing_mode="stretch_width"
+    return column(
+        row(x_select, y_select, align="center"),
+        fig_all_in_one,
+        sizing_mode="stretch_width",
     )
-    return interaction_fig
 
 
 # ######### Interactions for report #########

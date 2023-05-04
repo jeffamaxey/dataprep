@@ -126,10 +126,11 @@ def validate_fr_siren(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(siren.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(siren.is_valid)
-        else:
-            return df.applymap(siren.is_valid)
+        return (
+            df[column].apply(siren.is_valid)
+            if column
+            else df.applymap(siren.is_valid)
+        )
     return siren.is_valid(df)
 
 

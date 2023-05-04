@@ -239,11 +239,8 @@ def _format_address(
             np.nan if not value else value if errors == "ignore" else np.nan for value in outputs
         ) + (1,)
 
-    if len(outputs) == 1 and address == outputs[0]:
-        code = 3
-    else:
-        code = 2
-    return tuple(np.nan if not value else value for value in outputs) + (code,)
+    code = 3 if len(outputs) == 1 and address == outputs[0] else 2
+    return tuple(value if value else np.nan for value in outputs) + (code,)
 
 
 def _check_address(address: Any, must_contain: Tuple[str, ...], clean: bool) -> Any:
@@ -272,9 +269,7 @@ def _check_address(address: Any, must_contain: Tuple[str, ...], clean: bool) -> 
     except RepeatedLabelError:
         return (None, "unknown") if clean else False
 
-    status = _check_status(address, must_contain)
-
-    if status:
+    if status := _check_status(address, must_contain):
         return (address, "success") if clean else True
 
     return (address, "unknown") if clean else False
@@ -380,8 +375,7 @@ def _clean_prefix(result_dict: Dict[str, str], prefix: str) -> None:
     Adds a cleaned full prefix and cleaned abbreviated prefix to result_dict,
     based on the value of street prefix
     """
-    prefix_abbr = PREFIXES.get(prefix.lower())
-    if prefix_abbr:
+    if prefix_abbr := PREFIXES.get(prefix.lower()):
         result_dict["street_prefix_abbr"] = prefix_abbr
         result_dict["street_prefix_full"] = FULL_PREFIX[prefix_abbr]
 
@@ -391,8 +385,7 @@ def _clean_suffix(result_dict: Dict[str, str], suffix: str) -> None:
     Adds a cleaned full suffix and cleaned abbreviated suffix to result_dict,
     based on the value of the street suffix
     """
-    suffix_tuple = SUFFIXES.get(suffix.upper())
-    if suffix_tuple:
+    if suffix_tuple := SUFFIXES.get(suffix.upper()):
         result_dict["street_suffix_abbr"] = suffix_tuple[0].capitalize() + "."
         result_dict["street_suffix_full"] = suffix_tuple[1].capitalize()
 

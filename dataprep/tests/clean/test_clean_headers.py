@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_headers() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "ISBN": [9781455582341],
             "isbn": [1455582328],
@@ -26,12 +26,11 @@ def df_headers() -> pd.DataFrame:
             "★ Rating": [4.06],
         }
     )
-    return df
 
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_null_headers() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "": [9781455582341],
             np.nan: ["How Google Works"],
@@ -39,7 +38,6 @@ def df_null_headers() -> pd.DataFrame:
             "N/A": [2014],
         }
     )
-    return df
 
 
 def test_clean_default(df_headers: pd.DataFrame) -> None:

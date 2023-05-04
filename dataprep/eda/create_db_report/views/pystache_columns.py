@@ -17,7 +17,7 @@ class MustacheTableColumn:
         elif self.tableColumn.isForeignKey():
             keyType = " class='foreignKey' title='Foreign Key'"
         elif self.indexColumn:
-            keyType = " class='" + self.markAsIndexColumn() + "' title='Indexed'"
+            keyType = f" class='{self.markAsIndexColumn()}' title='Indexed'"
 
         return keyType
 
@@ -53,22 +53,13 @@ class MustacheTableColumn:
         return keyIcon
 
     def getNullable(self):
-        if not self.tableColumn.notnull():
-            return "√"
-        else:
-            return ""
+        return "" if self.tableColumn.notnull() else "√"
 
     def getTitleNullable(self):
-        if self.tableColumn.notnull():
-            return "nullable"
-        else:
-            return ""
+        return "nullable" if self.tableColumn.notnull() else ""
 
     def getAutoUpdated(self):
-        if self.tableColumn.isautoupdated():
-            return "√"
-        else:
-            return ""
+        return "√" if self.tableColumn.isautoupdated() else ""
 
     def getTitleAutoUpdated(self):
         if self.tableColumn.isautoupdated():
@@ -80,6 +71,4 @@ class MustacheTableColumn:
         return str(self.tableColumn.getDefaultValue())
 
     def markAsIndexColumn(self):
-        if self.indexColumn:
-            return "indexedColumn"
-        return ""
+        return "indexedColumn" if self.indexColumn else ""

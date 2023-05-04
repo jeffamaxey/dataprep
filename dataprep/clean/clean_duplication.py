@@ -263,20 +263,11 @@ class UserInterface:
         Update the dropdowns row of the UI to display the required text boxes for passing
         parameters needed for the given clustering method.
         """
-        if clustering_method in ("fingerprint", "phonetic-fingerprint"):
+        if clustering_method in {"fingerprint", "phonetic-fingerprint"}:
             self._export_code.layout.margin = "0 0 0 482px"
             self._dropds.children = [
                 self._clustering_method_label,
                 self._clustering_method_drop,
-                self._export_code,
-            ]
-
-        if clustering_method == "ngram-fingerprint":
-            self._export_code.layout.margin = "0 0 0 348px"
-            self._dropds.children = [
-                self._clustering_method_label,
-                self._clustering_method_drop,
-                self._ngram_text,
                 self._export_code,
             ]
 
@@ -287,6 +278,14 @@ class UserInterface:
                 self._clustering_method_drop,
                 self._radius_text,
                 self._block_chars_text,
+                self._export_code,
+            ]
+        elif clustering_method == "ngram-fingerprint":
+            self._export_code.layout.margin = "0 0 0 348px"
+            self._dropds.children = [
+                self._clustering_method_label,
+                self._clustering_method_drop,
+                self._ngram_text,
                 self._export_code,
             ]
 
@@ -344,9 +343,7 @@ class UserInterface:
 
         if prev_is_valid and next_is_valid:
             self._next_button.layout.margin = "0 0 0 628px"
-            next_prev.append(self._prev_button)
-            next_prev.append(self._next_button)
-
+            next_prev.extend((self._prev_button, self._next_button))
         elif prev_is_valid:
             next_prev.append(self._prev_button)
 

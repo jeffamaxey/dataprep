@@ -128,10 +128,11 @@ def validate_de_stnr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(stnr.is_valid, args=(region,))
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(stnr.is_valid, args=(region,))
-        else:
-            return df.applymap(lambda x: stnr.is_valid(x, region))
+        return (
+            df[column].apply(stnr.is_valid, args=(region,))
+            if column
+            else df.applymap(lambda x: stnr.is_valid(x, region))
+        )
     return stnr.is_valid(df, region)
 
 

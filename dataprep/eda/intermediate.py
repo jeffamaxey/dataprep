@@ -26,7 +26,7 @@ class Intermediate(Dict[str, Any]):
         ):
             super().__init__(args[0])
             self.visual_type = kwargs["visual_type"]
-        elif len(args) == 0:
+        elif not args:
             visual_type = kwargs.pop("visual_type")
             super().__init__(**kwargs)
             self.visual_type = visual_type
@@ -51,11 +51,7 @@ class Intermediate(Dict[str, Any]):
             posix_path = Path(path).expanduser()
 
             if posix_path.is_dir():
-                if path.endswith("/"):
-                    path += "imdt.json"
-                else:
-                    path += "/imdt.json"
-
+                path += "imdt.json" if path.endswith("/") else "/imdt.json"
             elif extension:
                 if extension != ".json":
                     raise ValueError(
@@ -65,16 +61,11 @@ class Intermediate(Dict[str, Any]):
             else:
                 path += ".json"
 
-            saved_file_path = Path(path).expanduser()
-
         else:
-            path = str(Path.cwd()) + "/imdt.json"
-            saved_file_path = Path(path).expanduser()
+            path = f"{str(Path.cwd())}/imdt.json"
+        saved_file_path = Path(path).expanduser()
 
-        # pylint: disable=no-member
-        inter_dict: Dict[str, Any] = {}
-        for key in self.keys():
-            inter_dict[key] = self[key]
+        inter_dict: Dict[str, Any] = {key: self[key] for key in self.keys()}
         self._standardize_type(inter_dict)
         with open(path, "w") as outfile:
             json.dump(inter_dict, outfile, indent=4)
@@ -162,13 +153,9 @@ class Intermediate(Dict[str, Any]):
                                     ):
                                         ndy_value[ndy_idx] = int(ndy_val)
                                 value[list_idx] = tuple(ndy_value)
-                            else:
-                                pass
                     elif isinstance(value, (np.ndarray,)):
                         inter_dict[key][idx] = value.tolist()
                     inter_dict[key][idx] = tuple(value)
-            else:
-                pass
 
 
 class ColumnsMetadata:
@@ -191,11 +178,10 @@ class ColumnsMetadata:
         self.metadata.loc[col, vtype] = val
 
     def __getitem__(self, key: Union[str, Tuple[str, str]]) -> Any:
-        if isinstance(key, tuple):
-            col, vtype = key
-            return self.metadata.loc[col, vtype]
-        else:
+        if not isinstance(key, tuple):
             return ColumnMetadata(self.metadata.loc[key])
+        col, vtype = key
+        return self.metadata.loc[col, vtype]
 
 
 class ColumnMetadata:

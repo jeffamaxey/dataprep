@@ -25,9 +25,7 @@ def simpledf() -> dd.DataFrame:
     np.random.shuffle(idx)
     df.iloc[idx[:500], 0] = None
 
-    ddf = to_dask(df)
-
-    return ddf
+    return to_dask(df)
 
 
 def test_random_df(random_df: pd.DataFrame) -> None:
@@ -118,7 +116,7 @@ def test_sanity_compute_7() -> None:
 def test_no_missing() -> None:
     from sys import platform
 
-    if platform == "darwin" or platform == "win32":
+    if platform in ["darwin", "win32"]:
         import matplotlib
 
         matplotlib.use("PS")

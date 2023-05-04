@@ -123,10 +123,7 @@ def validate_ec_ci(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ci.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ci.is_valid)
-        else:
-            return df.applymap(ci.is_valid)
+        return df[column].apply(ci.is_valid) if column else df.applymap(ci.is_valid)
     return ci.is_valid(df)
 
 

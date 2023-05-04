@@ -123,10 +123,7 @@ def validate_lt_pvm(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(pvm.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(pvm.is_valid)
-        else:
-            return df.applymap(pvm.is_valid)
+        return df[column].apply(pvm.is_valid) if column else df.applymap(pvm.is_valid)
     return pvm.is_valid(df)
 
 

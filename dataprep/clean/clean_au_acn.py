@@ -119,10 +119,7 @@ def validate_au_acn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(acn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(acn.is_valid)
-        else:
-            return df.applymap(acn.is_valid)
+        return df[column].apply(acn.is_valid) if column else df.applymap(acn.is_valid)
     return acn.is_valid(df)
 
 

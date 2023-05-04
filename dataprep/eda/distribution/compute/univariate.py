@@ -73,9 +73,7 @@ def compute_univariate(
         return Intermediate(col=x, data=data, visual_type="numerical_column")
 
     elif isinstance(col_dtype, DateTime):
-        data_dt: List[Any] = []
-        # stats
-        data_dt.append(dask.delayed(calc_stats_dt)(frame.frame[x]))
+        data_dt: List[Any] = [dask.delayed(calc_stats_dt)(frame.frame[x])]
         # line chart
         if cfg.line.enable:
             data_dt.append(dask.delayed(_calc_line_dt)(frame.frame[[x]], cfg.line.unit))
@@ -101,9 +99,8 @@ def nom_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
     All computations required for plot(df, Nominal). Assume srs is string column.
     """
     # pylint: disable=too-many-branches
-    data: Dict[str, Any] = dict()
+    data: Dict[str, Any] = {"nrows": srs.shape[0]}
 
-    data["nrows"] = srs.shape[0]  # total rows
     srs = srs.dropna()  # drop null values
     grps = srs.value_counts(sort=False)  # counts of unique values in the series
     data["geo"] = grps
@@ -137,7 +134,7 @@ def nom_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
 
     df = grps.reset_index()  # dataframe with group names and counts
     if cfg.stats.enable or cfg.value_table.enable:
-        data.update(_calc_nom_stats(srs, df, data["nrows"], data["nuniq"]))
+        data |= _calc_nom_stats(srs, df, data["nrows"], data["nuniq"])
     elif cfg.wordfreq.enable and cfg.insight.enable:
         data["len_stats"] = {"Minimum": srs.str.len().min(), "Maximum": srs.str.len().max()}
     if cfg.wordlen.enable:
@@ -156,7 +153,6 @@ def nom_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
                 cfg.wordfreq.stem,
             )
             data["word_cnts_cloud"] = word_freqs["word_cnts"]
-            data["nuniq_words_cloud"] = word_freqs["nuniq_words"]
         else:
             word_freqs = _calc_word_freq(
                 df.copy(),
@@ -173,8 +169,7 @@ def nom_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
                 cfg.wordcloud.stem,
             )
             data["word_cnts_cloud"] = word_freqs_cloud["word_cnts"]
-            data["nuniq_words_cloud"] = word_freqs["nuniq_words"]
-
+        data["nuniq_words_cloud"] = word_freqs["nuniq_words"]
         data["word_cnts_freq"] = word_freqs["word_cnts"]
         data["nwords_freq"] = word_freqs["nwords"]
 
@@ -186,9 +181,8 @@ def cont_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
     All computations required for plot(df, Continuous)
     """
     # pylint: disable=too-many-branches
-    data: Dict[str, Any] = {}
+    data: Dict[str, Any] = {"nrows": srs.shape[0]}
 
-    data["nrows"] = srs.shape[0]  # total rows
     srs = srs.dropna()
     data["npres"] = srs.shape[0]  # number of present (not null) values
     srs = srs[~srs.isin({np.inf, -np.inf})]  # remove infinite values
@@ -218,19 +212,17 @@ def cont_comps(srs: dd.Series, cfg: Config) -> Dict[str, Any]:
         data["nneg"] = (srs < 0).sum()
         data["kurt"] = kurtosis(srs)
         data["mem_use"] = srs.memory_usage(deep=True)
-    # compute the density histogram
     if cfg.kde.enable:
-        # To avoid the singular matrix problem, gaussian_kde needs a non-zero std.
-        if not math.isclose(dask.compute(data["min"])[0], dask.compute(data["max"])[0]):
+        if math.isclose(dask.compute(data["min"])[0], dask.compute(data["max"])[0]):
+            data["kde"] = None
+        else:
             data["dens"] = da.histogram(srs, cfg.kde.bins, (srs.min(), srs.max()), density=True)
             # gaussian kernel density estimate
             data["kde"] = gaussian_kde(
                 srs.map_partitions(lambda x: x.sample(min(1000, x.shape[0])), meta=srs)
             )
-        else:
-            data["kde"] = None
     if cfg.box.enable:
-        data.update(_calc_box(srs, data["qntls"], cfg))
+        data |= _calc_box(srs, data["qntls"], cfg)
     if cfg.value_table.enable:
         value_counts = srs.value_counts(sort=False)
         data["nuniq"] = value_counts.shape[0]
@@ -355,7 +347,7 @@ def calc_stats_dt(srs: dd.Series) -> Dict[str, str]:
         uniq_count = srs.nunique_approx()
     except:  # pylint: disable=W0702
         uniq_count = srs.nunique()
-    overview_dict = {
+    return {
         "Distinct Count": uniq_count,
         "Approximate Unique (%)": uniq_count / count,
         "Missing": size - count,
@@ -364,5 +356,3 @@ def calc_stats_dt(srs: dd.Series) -> Dict[str, str]:
         "Minimum": srs.min(),
         "Maximum": srs.max(),
     }
-
-    return overview_dict

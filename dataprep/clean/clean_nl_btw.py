@@ -123,10 +123,7 @@ def validate_nl_btw(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(btw.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(btw.is_valid)
-        else:
-            return df.applymap(btw.is_valid)
+        return df[column].apply(btw.is_valid) if column else df.applymap(btw.is_valid)
     return btw.is_valid(df)
 
 

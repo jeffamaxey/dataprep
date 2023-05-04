@@ -131,10 +131,7 @@ def validate_at_vnr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(vnr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(vnr.is_valid)
-        else:
-            return df.applymap(vnr.is_valid)
+        return df[column].apply(vnr.is_valid) if column else df.applymap(vnr.is_valid)
     return vnr.is_valid(df)
 
 
@@ -164,6 +161,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [vnr.compact(val)] + result
-
-    return result
+    return [vnr.compact(val)] + result

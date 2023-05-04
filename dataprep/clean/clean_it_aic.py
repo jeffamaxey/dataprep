@@ -128,10 +128,7 @@ def validate_it_aic(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(aic.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(aic.is_valid)
-        else:
-            return df.applymap(aic.is_valid)
+        return df[column].apply(aic.is_valid) if column else df.applymap(aic.is_valid)
     return aic.is_valid(df)
 
 

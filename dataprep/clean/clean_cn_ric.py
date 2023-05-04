@@ -126,10 +126,7 @@ def validate_cn_ric(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ric.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ric.is_valid)
-        else:
-            return df.applymap(ric.is_valid)
+        return df[column].apply(ric.is_valid) if column else df.applymap(ric.is_valid)
     return ric.is_valid(df)
 
 

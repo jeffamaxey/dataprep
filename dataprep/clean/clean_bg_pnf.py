@@ -123,10 +123,7 @@ def validate_bg_pnf(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(pnf.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(pnf.is_valid)
-        else:
-            return df.applymap(pnf.is_valid)
+        return df[column].apply(pnf.is_valid) if column else df.applymap(pnf.is_valid)
     return pnf.is_valid(df)
 
 

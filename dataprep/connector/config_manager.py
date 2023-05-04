@@ -31,13 +31,11 @@ def initialize_path(config_path: str, update: bool) -> Path:
     """Determines if the given config_path is local or in GitHub.
     Fetches the full path."""
     if config_path.startswith(".") or config_path.startswith("/") or config_path.startswith("~"):
-        path = Path(config_path).resolve()
-    else:
-        # From GitHub!
-        impdb, branch = separate_branch(config_path)
-        ensure_config(impdb, branch, update)
-        path = config_directory() / branch / impdb
-    return path
+        return Path(config_path).resolve()
+    # From GitHub!
+    impdb, branch = separate_branch(config_path)
+    ensure_config(impdb, branch, update)
+    return config_directory() / branch / impdb
 
 
 def config_directory() -> Path:
@@ -59,9 +57,8 @@ def ensure_config(impdb: str, branch: str, update: bool) -> bool:
 
     if (path / branch / impdb / "_meta.json").exists() and not obsolete:
         return True
-    else:
-        download_config(impdb, branch)
-        return False
+    download_config(impdb, branch)
+    return False
 
 
 def is_obsolete(impdb: str, branch: str) -> bool:

@@ -14,14 +14,8 @@ class HtmlTablePage:
         Compile the data needed by the pystache template for tables pages
         """
         primaries = set(table.getPrimaryColumns())
-        indexes = set()
-        table_columns = set()
-
-        for i in table.getIndexes():
-            indexes.add(PSIndex(i))
-
-        for c in table.getColumns():
-            table_columns.add(MustacheTableColumn(c, None, ""))
+        indexes = {PSIndex(i) for i in table.getIndexes()}
+        table_columns = {MustacheTableColumn(c, None, "") for c in table.getColumns()}
         check_constraints = None  # HtmlTablePage.collect_check_constraints(table)
 
         page_data = PageData("tables/table.html", "table.js")

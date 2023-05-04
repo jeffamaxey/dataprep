@@ -456,9 +456,11 @@ def _fix_domain_name(dom: str) -> str:
                     return dom[: i + 1] + new_c + dom[i + 1 :]
 
             # redundant single char
-            if i < len(dom) - 1:
-                if dom[:i] + dom[i + 1] + curr_c + dom[i + 2 :] in DOMAINS:
-                    return dom[:i] + dom[i + 1] + curr_c + dom[i + 2 :]
+            if (
+                i < len(dom) - 1
+                and dom[:i] + dom[i + 1] + curr_c + dom[i + 2 :] in DOMAINS
+            ):
+                return dom[:i] + dom[i + 1] + curr_c + dom[i + 2 :]
 
             # misspelled single char
             if curr_c in NEARBYKEYS:

@@ -62,9 +62,7 @@ def histogram(
         counts, edges = da.histogram(arr, bins, range=[minimum, maximum])
         centers = (edges[:-1] + edges[1:]) / 2
 
-        if not return_edges:
-            return counts, centers
-        return counts, centers, edges
+        return (counts, centers, edges) if return_edges else (counts, centers)
     elif isinstance(eda_dtype, (Nominal, GeoGraphy, SmallCardNum, DateTime)):
         # Dask array's unique is way slower than the values_counts on Series
         # See https://github.com/dask/dask/issues/2851

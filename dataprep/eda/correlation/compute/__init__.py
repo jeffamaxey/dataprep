@@ -73,9 +73,9 @@ def compute_correlation(
                 category=RuntimeWarning,
             )
             return _calc_univariate(frame, x, cfg, value_range=value_range, k=k)
-    elif x is None and y is not None:
+    elif x is None:
         raise ValueError("Please give the column name to x instead of y")
-    elif x is not None and y is not None:
+    else:
         return _calc_bivariate(frame, cfg, x, y, k=k)
 
     raise ValueError("Not Possible")

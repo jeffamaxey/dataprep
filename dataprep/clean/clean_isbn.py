@@ -144,10 +144,11 @@ def validate_isbn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(isbn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(isbn.is_valid)
-        else:
-            return df.applymap(isbn.is_valid)
+        return (
+            df[column].apply(isbn.is_valid)
+            if column
+            else df.applymap(isbn.is_valid)
+        )
     return isbn.is_valid(df)
 
 
@@ -171,11 +172,7 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_isbn(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
@@ -187,15 +184,15 @@ def _format(
 
     if split:
         result = list(isbn.split(isbn.to_isbn13(val)))
-        if len(result) == 0:
+        if not result:
             return [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan]
     if output_format == "compact":
         result = [isbn.compact(val)] + result
-    elif output_format == "standard":
-        result = [isbn.format(val)] + result
-    elif output_format == "isbn13":
-        result = [isbn.format(isbn.to_isbn13(val))] + result
     elif output_format == "isbn10":
         result = [isbn.format(isbn.to_isbn10(val))] + result
 
+    elif output_format == "isbn13":
+        result = [isbn.format(isbn.to_isbn13(val))] + result
+    elif output_format == "standard":
+        result = [isbn.format(val)] + result
     return result

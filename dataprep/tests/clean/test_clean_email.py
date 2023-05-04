@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_broken_email() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_email": [
                 "yi@gmali.com",
@@ -28,7 +28,6 @@ def df_broken_email() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_broken_email: pd.DataFrame) -> None:

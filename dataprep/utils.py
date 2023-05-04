@@ -17,9 +17,7 @@ def is_notebook() -> Any:
         # pytype: enable=import-error
 
         shell = get_ipython().__class__.__name__
-        if shell == "ZMQInteractiveShell":
-            return True
-        return False
+        return shell == "ZMQInteractiveShell"
     except (NameError, ImportError):
         return False
 

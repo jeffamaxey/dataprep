@@ -24,10 +24,6 @@ def _calc_overview(
     value_range: Optional[Tuple[float, float]] = None,
     k: Optional[int] = None,
 ) -> Intermediate:
-    # pylint: disable=too-many-statements,too-many-locals,too-many-branches
-
-    most_show = 6  # the most number of column/row to show in "insight"
-
     if value_range is not None and k is not None:
         raise ValueError("value_range and k cannot be present in both")
 
@@ -95,6 +91,10 @@ def _calc_overview(
 
     if cfg.insight.enable:
         insights: Dict[str, List[Any]] = {}
+        # pylint: disable=too-many-statements,too-many-locals,too-many-branches
+
+        most_show = 6  # the most number of column/row to show in "insight"
+
         if cfg.pearson.enable:
             p_p_corr = create_string("positive", pearson_pos_cols, most_show, num_df)
             p_n_corr = create_string("negative", pearson_neg_cols, most_show, num_df)
@@ -265,26 +265,29 @@ def least_corr(corrs: np.ndarray) -> Tuple[float, List[Any]]:
 def create_string(flag: str, source: List[Any], most_show: int, df: EDAFrame) -> str:
     """Create the output string"""
     suffix = "" if len(source) <= most_show else ", ..."
-    if flag == "positive":
-        prefix = "Most positive correlated: "
-        temp = "Most positive correlated: None"
-    elif flag == "negative":
-        prefix = "Most negative correlated: "
-        temp = "Most negative correlated: None"
-    elif flag == "least":
+    if flag == "least":
         prefix = "Least correlated: "
         temp = "Least correlated: None"
 
-    if source != []:
-        out = (
+    elif flag == "negative":
+        prefix = "Most negative correlated: "
+        temp = "Most negative correlated: None"
+    elif flag == "positive":
+        prefix = "Most positive correlated: "
+        temp = "Most positive correlated: None"
+    return (
+        (
             prefix
             + ", ".join(
-                "(" + cut_long_name(df.columns[e[0]]) + ", " + cut_long_name(df.columns[e[1]]) + ")"
+                "("
+                + cut_long_name(df.columns[e[0]])
+                + ", "
+                + cut_long_name(df.columns[e[1]])
+                + ")"
                 for e in source[:most_show]
             )
             + suffix
         )
-    else:
-        out = temp
-
-    return out
+        if source != []
+        else temp
+    )

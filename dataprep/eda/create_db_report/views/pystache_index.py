@@ -10,16 +10,15 @@ class PSIndex:
 
     def getKey(self):
         if self.index.isPrimaryKey():
-            keyType = " class='primaryKey' title='Primary Key'"
+            return " class='primaryKey' title='Primary Key'"
         elif self.index.isUniqueKey():
-            keyType = " class='uniqueKey' title='Unique Key'"
+            return " class='uniqueKey' title='Unique Key'"
         else:
-            keyType = " title='Indexed'"
-        return keyType
+            return " title='Indexed'"
 
     def getKeyIcon(self):
-        keyIcon = ""
-        if self.index.isPrimaryKey() or self.index.isUniqueKey():
-            keyIcon = "<i class='icon ion-key iconkey'></i> "
-
-        return keyIcon
+        return (
+            "<i class='icon ion-key iconkey'></i> "
+            if self.index.isPrimaryKey() or self.index.isUniqueKey()
+            else ""
+        )

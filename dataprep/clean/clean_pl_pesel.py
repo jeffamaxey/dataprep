@@ -126,10 +126,11 @@ def validate_pl_pesel(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(pesel.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(pesel.is_valid)
-        else:
-            return df.applymap(pesel.is_valid)
+        return (
+            df[column].apply(pesel.is_valid)
+            if column
+            else df.applymap(pesel.is_valid)
+        )
     return pesel.is_valid(df)
 
 

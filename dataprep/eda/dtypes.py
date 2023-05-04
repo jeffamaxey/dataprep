@@ -174,15 +174,15 @@ def map_dtype(dtype: DType) -> DType:
     We will map Categorical() to Nominal() and Numerical() to Continuous()
     """
     if (
-        isinstance(dtype, Categorical) is True
-        and isinstance(dtype, Ordinal) is False
-        and isinstance(dtype, Nominal) is False
+        isinstance(dtype, Categorical)
+        and not isinstance(dtype, Ordinal)
+        and not isinstance(dtype, Nominal)
     ):
         return Nominal()
     elif (
-        isinstance(dtype, Numerical) is True
-        and isinstance(dtype, Continuous) is False
-        and isinstance(dtype, Discrete) is False
+        isinstance(dtype, Numerical)
+        and not isinstance(dtype, Continuous)
+        and not isinstance(dtype, Discrete)
     ):
         return Continuous()
     else:
@@ -197,22 +197,14 @@ def detect_without_known(col: dd.Series, detect_small_distinct: bool) -> DType:
     if is_nominal(col.dtype):
         if is_geography(col):
             return GeoGraphy()
-        if is_geopoint(col):
-            return GeoPoint()
-        else:
-            return Nominal()
-
+        return GeoPoint() if is_geopoint(col) else Nominal()
     elif is_continuous(col.dtype):
-        if detect_small_distinct:
-            # detect as categorical if distinct value is small
-            nuniques = col.nunique_approx().compute()
-            if nuniques < 10:
-                return Nominal()
-            else:
-                return Continuous()
-        else:
+        if not detect_small_distinct:
             return Continuous()
 
+        # detect as categorical if distinct value is small
+        nuniques = col.nunique_approx().compute()
+        return Nominal() if nuniques < 10 else Continuous()
     elif is_datetime(col.dtype):
         return DateTime()
     else:
@@ -326,10 +318,7 @@ def drop_null(
     """
 
     if isinstance(var, (pd.Series, dd.Series)):
-        if is_datetime(var.dtype):
-            return var.dropna()
-        return var[~var.isin(NULL_VALUES)]
-
+        return var.dropna() if is_datetime(var.dtype) else var[~var.isin(NULL_VALUES)]
     elif isinstance(var, (pd.DataFrame, dd.DataFrame)):
         df = var
         for values in df.columns:

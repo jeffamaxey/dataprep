@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_addresses() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_address": [
                 "123 pine ave",
@@ -30,7 +30,6 @@ def df_addresses() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_addresses: pd.DataFrame) -> None:

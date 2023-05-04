@@ -131,10 +131,7 @@ def validate_at_uid(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(uid.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(uid.is_valid)
-        else:
-            return df.applymap(uid.is_valid)
+        return df[column].apply(uid.is_valid) if column else df.applymap(uid.is_valid)
     return uid.is_valid(df)
 
 
@@ -164,6 +161,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [uid.compact(val)] + result
-
-    return result
+    return [uid.compact(val)] + result

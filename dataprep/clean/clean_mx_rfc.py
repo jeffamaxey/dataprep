@@ -122,10 +122,7 @@ def validate_mx_rfc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(rfc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(rfc.is_valid)
-        else:
-            return df.applymap(rfc.is_valid)
+        return df[column].apply(rfc.is_valid) if column else df.applymap(rfc.is_valid)
     return rfc.is_valid(df)
 
 

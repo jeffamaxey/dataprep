@@ -126,10 +126,11 @@ def validate_gr_amka(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(amka.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(amka.is_valid)
-        else:
-            return df.applymap(amka.is_valid)
+        return (
+            df[column].apply(amka.is_valid)
+            if column
+            else df.applymap(amka.is_valid)
+        )
     return amka.is_valid(df)
 
 

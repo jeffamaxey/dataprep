@@ -31,10 +31,9 @@ class HtmlConstraintsPage:
 
     @staticmethod
     def collect_check_constraints(tables: List[Table]):
-        all_constraints = []
-        results = []
-        for table in tables:
-            if len(table.getCheckConstraints()) > 0:
-                all_constraints.append(table.getCheckConstraints())
-        for x in all_constraints:
-            results.append(PSConstraints(x, x.keys(), x.values()))
+        all_constraints = [
+            table.getCheckConstraints()
+            for table in tables
+            if len(table.getCheckConstraints()) > 0
+        ]
+        results = [PSConstraints(x, x.keys(), x.values()) for x in all_constraints]

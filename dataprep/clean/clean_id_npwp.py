@@ -122,10 +122,11 @@ def validate_id_npwp(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(npwp.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(npwp.is_valid)
-        else:
-            return df.applymap(npwp.is_valid)
+        return (
+            df[column].apply(npwp.is_valid)
+            if column
+            else df.applymap(npwp.is_valid)
+        )
     return npwp.is_valid(df)
 
 

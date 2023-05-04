@@ -123,10 +123,7 @@ def validate_cr_cr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cr.is_valid)
-        else:
-            return df.applymap(cr.is_valid)
+        return df[column].apply(cr.is_valid) if column else df.applymap(cr.is_valid)
     return cr.is_valid(df)
 
 

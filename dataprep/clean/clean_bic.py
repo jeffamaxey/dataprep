@@ -141,10 +141,7 @@ def validate_bic(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(bic.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(bic.is_valid)
-        else:
-            return df.applymap(bic.is_valid)
+        return df[column].apply(bic.is_valid) if column else df.applymap(bic.is_valid)
     return bic.is_valid(df)
 
 
@@ -166,20 +163,12 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_bic(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
         error_result = val if errors == "ignore" else np.nan
-        if split:
-            return [error_result, np.nan, np.nan, np.nan]
-        else:
-            return [error_result]
-
+        return [error_result, np.nan, np.nan, np.nan] if split else [error_result]
     if split:
         compacted_val = bic.compact(val)
         if len(result) == 8:

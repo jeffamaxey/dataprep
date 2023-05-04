@@ -97,11 +97,8 @@ def _format_values(key: str, value: Any) -> str:
         # eliminate trailing zeros
         pre_value = float(f"{value:.4f}")
         value = int(pre_value) if (pre_value * 10) % 10 == 0 else pre_value
-    elif 0.001 <= abs(value) < 1:
-        value = f"{value:.4g}"
     else:
-        value = str(value)
-
+        value = f"{value:.4g}"
     if "%" in key:
         # for percentage, only use digits before notation sign for extreme small number
         value = f"{float(value):.1%}"
@@ -224,9 +221,8 @@ def bar_viz(
     df.index = [str(val) for val in df.index]
 
     tooltips = [(col, "@index"), ("Count", f"@{{{col}}}"), ("Percent", "@pct{0.2f}%")]
-    if show_yticks:
-        if len(df) > 10:
-            plot_width = 28 * len(df)
+    if show_yticks and len(df) > 10:
+        plot_width = 28 * len(df)
     fig = Figure(
         plot_width=plot_width,
         plot_height=plot_height,
@@ -285,9 +281,9 @@ def pie_viz(
         tooltips=tooltips,
     )
     if pie.colors is None:
-        color_list = list((CATEGORY20 * (len(df) // len(CATEGORY20) + 1))[0 : len(df)])
+        color_list = list((CATEGORY20 * (len(df) // len(CATEGORY20) + 1))[:len(df)])
     else:
-        color_list = list(pie.colors[0 : len(df)])
+        color_list = list(pie.colors[:len(df)])
     df["colour"] = color_list
     df.index = df.index.astype(str)
     df.index = df.index.map(lambda x: x[:13] + "..." if len(x) > 13 else x)
@@ -584,13 +580,13 @@ def box_viz(
     fig.xaxis.axis_label = x if y is not None else None
     fig.yaxis.axis_label = x if y is None else y
 
-    minw = min(otlrs) if otlrs else np.nan
-    maxw = max(otlrs) if otlrs else np.nan
+    minw = min(otlrs, default=np.nan)
+    maxw = max(otlrs, default=np.nan)
     _format_axis(fig, min(df["lw"].min(), minw), max(df["uw"].max(), maxw), "y")
 
     if y and not ttl_grps:  # format categorical axis tick values
         # start by rounding to the length of the largest possible number
-        round_to = -len(str(max([abs(int(ept)) for ept in endpts])))
+        round_to = -len(str(max(abs(int(ept)) for ept in endpts)))
         ticks = np.round(endpts, round_to)
         nticks = len(df) // 5 + 1
         show_ticks = [ticks[i] for i in range(len(ticks)) if i % nticks == 0]
@@ -674,18 +670,16 @@ def geo_viz(
     minimum = min(df[y])
     maximum = max(df[y])
 
-    # no_name=[]
-    value = {}
     names = NAME_DICT.keys()
-    for i in range(df[y].shape[0]):
-        if df.index[i].lower().strip() in names:
-            value[NAME_DICT[df.index[i].lower().strip()]] = df[y][i]
-        # else:
-        #     no_name.append(df.index[i])
-
-    temp_list = []
-    for itr in range(len(MAPS["name"])):
-        temp_list.append(value.get(MAPS["fip"][itr], "unknown"))
+    value = {
+        NAME_DICT[df.index[i].lower().strip()]: df[y][i]
+        for i in range(df[y].shape[0])
+        if df.index[i].lower().strip() in names
+    }
+    temp_list = [
+        value.get(MAPS["fip"][itr], "unknown")
+        for itr in range(len(MAPS["name"]))
+    ]
     MAPS["value"] = temp_list
 
     mapper = LinearColorMapper(
@@ -821,14 +815,14 @@ def box_viz_dt(
     fig.xaxis.axis_label = x if y is not None else None
     fig.yaxis.axis_label = x if y is None else y
 
-    minw = min(outy) if outy else np.nan
-    maxw = max(outy) if outy else np.nan
+    minw = min(outy, default=np.nan)
+    maxw = max(outy, default=np.nan)
     _format_axis(fig, min(df["lw"].min(), minw), max(df["uw"].max(), maxw), "y")
 
     if not grp_cnt_stats and y and not timeunit:  # format categorical axis tick values
         endpts = list(df["lb"]) + [df.iloc[len(df) - 1]["ub"]]
         # start by rounding to the length of the largest possible number
-        round_to = -len(str(max([abs(int(ept)) for ept in endpts])))
+        round_to = -len(str(max(abs(int(ept)) for ept in endpts)))
         ticks = np.round(endpts, round_to)
         nticks = len(df) // 5 + 1
         show_ticks = [ticks[i] for i in range(len(ticks)) if i % nticks == 0]
@@ -851,7 +845,7 @@ def box_viz_dt(
         fig.xaxis.major_label_text_font_size = "10pt"
 
     if timeunit == "Week of":
-        fig.xaxis.axis_label = x + ", the week of"
+        fig.xaxis.axis_label = f"{x}, the week of"
 
     return Panel(child=row(fig), title="Box Plot")
 
@@ -1083,13 +1077,12 @@ def stacked_viz(
     df = pd.concat([df2, df], axis=1)
 
     title = _make_title(grp_cnt_stats, x, y)
-    if not timeunit:
-        if grp_cnt_stats[f"{x}_shw"] > 30:
-            plot_width = 32 * grp_cnt_stats[f"{x}_shw"]
-    else:
+    if timeunit:
         if len(df) > 30:
             plot_width = 32 * len(df)
 
+    elif grp_cnt_stats[f"{x}_shw"] > 30:
+        plot_width = 32 * grp_cnt_stats[f"{x}_shw"]
     fig = figure(
         plot_height=plot_height,
         plot_width=plot_width,
@@ -1100,9 +1093,9 @@ def stacked_viz(
     grps = list(df2.columns)
     palette = PASTEL1 * (len(grps) // len(PASTEL1) + 1)
     if "Others" in grps:
-        colours = palette[0 : len(grps) - 1] + ("#636363",)
+        colours = palette[:len(grps) - 1] + ("#636363",)
     else:
-        colours = palette[0 : len(grps)]
+        colours = palette[:len(grps)]
     source = ColumnDataSource(data=df)
     renderers = fig.vbar_stack(
         stackers=grps,
@@ -1174,7 +1167,7 @@ def stacked_viz(
         _format_axis(fig, 0, df.sum(axis=1).max(), "y")
         fig.xaxis.axis_label = x
         if timeunit == "Week of":
-            fig.xaxis.axis_label = x + ", the week of"
+            fig.xaxis.axis_label = f"{x}, the week of"
 
     tweak_figure(fig, "stacked")
 
@@ -1348,7 +1341,7 @@ def dt_multiline_viz(
     )
 
     ymin, ymax = np.Inf, -np.Inf
-    plot_dict = dict()
+    plot_dict = {}
     for grp, colour in zip(grps, palette):
         grp_name = (grp[: (max_lbl_len - 1)] + "...") if len(grp) > max_lbl_len else grp
         source = ColumnDataSource({"x": data[grp][1], "y": data[grp][0], "lbl": data[grp][2]})
@@ -1552,13 +1545,11 @@ def render_cat(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
     if cfg.plot.report:
         plot_width = 400
         plot_height = 350
-        plot_width_bar = plot_width
-        plot_height_bar = plot_height
     else:
         plot_width = cfg.plot.width if cfg.plot.width is not None else 450
         plot_height = cfg.plot.height if cfg.plot.height is not None else 400
-        plot_width_bar = plot_width
-        plot_height_bar = plot_height
+    plot_height_bar = plot_height
+    plot_width_bar = plot_width
     tabs: List[Panel] = []
     htgs: Dict[str, List[Tuple[str, str]]] = {}
     col, data = itmdt["col"], itmdt["data"]
@@ -1588,22 +1579,20 @@ def render_cat(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         )
         tabs.append(fig)
         htgs["Pie Chart"] = cfg.pie.how_to_guide(color_list, plot_height, plot_width)
-    if cfg.wordcloud.enable:
-        if data["nuniq_words_cloud"] > 0:
-            tabs.append(wordcloud_viz(data["word_cnts_cloud"], plot_width, plot_height))
-            htgs["Word Cloud"] = cfg.wordcloud.how_to_guide(plot_height, plot_width)
-    if cfg.wordfreq.enable:
-        if data["nwords_freq"] > 0:
-            tabs.append(
-                wordfreq_viz(
-                    data["word_cnts_freq"],
-                    data["nwords_freq"],
-                    plot_width,
-                    plot_height,
-                    cfg.wordfreq,
-                )
+    if cfg.wordcloud.enable and data["nuniq_words_cloud"] > 0:
+        tabs.append(wordcloud_viz(data["word_cnts_cloud"], plot_width, plot_height))
+        htgs["Word Cloud"] = cfg.wordcloud.how_to_guide(plot_height, plot_width)
+    if cfg.wordfreq.enable and data["nwords_freq"] > 0:
+        tabs.append(
+            wordfreq_viz(
+                data["word_cnts_freq"],
+                data["nwords_freq"],
+                plot_width,
+                plot_height,
+                cfg.wordfreq,
             )
-            htgs["Word Frequency"] = cfg.wordfreq.how_to_guide(plot_height, plot_width)
+        )
+        htgs["Word Frequency"] = cfg.wordfreq.how_to_guide(plot_height, plot_width)
     if cfg.wordlen.enable:
         length_dist = hist_viz(
             data["len_hist"],
@@ -1628,10 +1617,10 @@ def render_cat(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         value_table = []
 
     # panel.child.children[0] is a figure
-    for panel in tabs[0:]:
+    for panel in tabs[:]:
         panel.child.children[0].frame_width = int(plot_width * 0.9)
 
-    if len(tabs) > 0:
+    if tabs:
         tabs[0].child.children[0].frame_width = int(plot_width_bar * 0.9)
 
     return {
@@ -1690,22 +1679,20 @@ def render_geo(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         )
         tabs.append(fig)
         htgs["Pie Chart"] = cfg.pie.how_to_guide(color_list, plot_height, plot_width)
-    if cfg.wordcloud.enable:
-        if data["nuniq_words_cloud"] > 0:
-            tabs.append(wordcloud_viz(data["word_cnts_cloud"], plot_width, plot_height))
-            htgs["Word Cloud"] = cfg.wordcloud.how_to_guide(plot_height, plot_width)
-    if cfg.wordfreq.enable:
-        if data["nwords_freq"] > 0:
-            tabs.append(
-                wordfreq_viz(
-                    data["word_cnts_freq"],
-                    data["nwords_freq"],
-                    plot_width,
-                    plot_height,
-                    cfg.wordfreq,
-                )
+    if cfg.wordcloud.enable and data["nuniq_words_cloud"] > 0:
+        tabs.append(wordcloud_viz(data["word_cnts_cloud"], plot_width, plot_height))
+        htgs["Word Cloud"] = cfg.wordcloud.how_to_guide(plot_height, plot_width)
+    if cfg.wordfreq.enable and data["nwords_freq"] > 0:
+        tabs.append(
+            wordfreq_viz(
+                data["word_cnts_freq"],
+                data["nwords_freq"],
+                plot_width,
+                plot_height,
+                cfg.wordfreq,
             )
-            htgs["Word Frequency"] = cfg.wordfreq.how_to_guide(plot_height, plot_width)
+        )
+        htgs["Word Frequency"] = cfg.wordfreq.how_to_guide(plot_height, plot_width)
 
     geo_df = geo_viz(data["geo"].to_frame().rename(columns={col: "count"}), plot_width, "count")
     tabs.append(geo_df)
@@ -1719,7 +1706,7 @@ def render_geo(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         value_table = []
 
     # panel.child.children[0] is a figure
-    for panel in tabs[0:]:
+    for panel in tabs[:]:
         panel.child.children[0].frame_width = int(plot_width * 0.9)
     tabs[0].child.children[0].frame_width = int(plot_width_bar * 0.9)
     return {
@@ -1748,19 +1735,20 @@ def _value_table(srs: pd.Series, nrows: int, npres: int, nuniq: int) -> List[Dic
 
     max_freq = max(df[col].max(), nothers, nmissing)
 
-    rows: List[Dict[str, Any]] = []
-    for index, record in df.iterrows():
-        rows.append(
-            {
-                "label": index,
-                "width": record[col] / max_freq,
-                "width_perc": f"{record[col] / max_freq * 100}%",
-                "count": int(record[col]),
-                "percentage": f"{record['pct']}%" if record["pct"] >= 0.1 else "< 0.1%",
-                "n": nrows,
-                "extra_class": "",
-            }
-        )
+    rows: List[Dict[str, Any]] = [
+        {
+            "label": index,
+            "width": record[col] / max_freq,
+            "width_perc": f"{record[col] / max_freq * 100}%",
+            "count": int(record[col]),
+            "percentage": f"{record['pct']}%"
+            if record["pct"] >= 0.1
+            else "< 0.1%",
+            "n": nrows,
+            "extra_class": "",
+        }
+        for index, record in df.iterrows()
+    ]
     if nothers > 0:
         pct = round(nothers / nrows * 100, 1)
         rows.append(
@@ -1829,17 +1817,20 @@ def nom_insights(data: Dict[str, Any], col: str, cfg: Config) -> Dict[str, List[
                 f"""The largest value ({val1}) is over {factor} times larger than the second
                 largest value ({val2})"""
             )
-    if cfg.pie.enable:
-        if (
-            data["pie"].iloc[:2].sum() / data["nrows"] > cfg.insight.attribution__threshold
-            and len(data["pie"]) >= 2
-        ):
-            vals = ", ".join(str(data["pie"].index[i]) for i in range(2))
-            ins["Pie Chart"].append(f"The top 2 categories ({vals}) take over {0.5*100}%")
-    if cfg.wordcloud.enable:
-        if data["nuniq_words_cloud"] > cfg.insight.high_word_cardinality__threshold:
-            nwords = data["nuniq_words_cloud"]
-            ins["Word Cloud"].append(f"{col} contains many words: {nwords} words")
+    if cfg.pie.enable and (
+        data["pie"].iloc[:2].sum() / data["nrows"]
+        > cfg.insight.attribution__threshold
+        and len(data["pie"]) >= 2
+    ):
+        vals = ", ".join(str(data["pie"].index[i]) for i in range(2))
+        ins["Pie Chart"].append(f"The top 2 categories ({vals}) take over {0.5*100}%")
+    if (
+        cfg.wordcloud.enable
+        and data["nuniq_words_cloud"]
+        > cfg.insight.high_word_cardinality__threshold
+    ):
+        nwords = data["nuniq_words_cloud"]
+        ins["Word Cloud"].append(f"{col} contains many words: {nwords} words")
     if cfg.wordfreq.enable:
         factor = (
             round(data["word_cnts_freq"].iloc[0] / data["word_cnts_freq"].iloc[1], 2)
@@ -1869,13 +1860,11 @@ def render_num(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
     if cfg.plot.report:
         plot_width = 400
         plot_height = 350
-        plot_width_hist = plot_width
-        plot_height_hist = plot_height
     else:
         plot_width = cfg.plot.width if cfg.plot.width is not None else 450
         plot_height = cfg.plot.height if cfg.plot.height is not None else 400
-        plot_width_hist = plot_width
-        plot_height_hist = plot_height
+    plot_height_hist = plot_height
+    plot_width_hist = plot_width
     col, data = itmdt["col"], itmdt["data"]
     tabs: List[Panel] = []
     htgs: Dict[str, List[Tuple[str, str]]] = {}
@@ -1893,18 +1882,22 @@ def render_num(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         )
         tabs.append(Panel(child=row(fig), title="Histogram"))
         htgs["Histogram"] = cfg.hist.how_to_guide(plot_height, plot_width)
-    if cfg.kde.enable:
-        # when the column is constant, we wont display kde plot
-        if data["kde"] is not None and (not math.isclose(data["min"], data["max"])):
-            dens, kde = data["dens"], data["kde"]
-            tabs.append(kde_viz(dens, kde, col, plot_width, plot_height, cfg.kde))
-            htgs["KDE Plot"] = cfg.kde.how_to_guide(plot_height, plot_width)
-    if cfg.qqnorm.enable and (not math.isclose(data["min"], data["max"])):
-        # when the column is constant, we wont display qq plot
-        if data["qntls"].any():
-            qntls, mean, std = data["qntls"], data["mean"], data["std"]
-            tabs.append(qqnorm_viz(qntls, mean, std, col, plot_width, plot_height, cfg.qqnorm))
-            htgs["Normal Q-Q Plot"] = cfg.qqnorm.how_to_guide(plot_height, plot_width)
+    if (
+        cfg.kde.enable
+        and data["kde"] is not None
+        and (not math.isclose(data["min"], data["max"]))
+    ):
+        dens, kde = data["dens"], data["kde"]
+        tabs.append(kde_viz(dens, kde, col, plot_width, plot_height, cfg.kde))
+        htgs["KDE Plot"] = cfg.kde.how_to_guide(plot_height, plot_width)
+    if (
+        cfg.qqnorm.enable
+        and (not math.isclose(data["min"], data["max"]))
+        and data["qntls"].any()
+    ):
+        qntls, mean, std = data["qntls"], data["mean"], data["std"]
+        tabs.append(qqnorm_viz(qntls, mean, std, col, plot_width, plot_height, cfg.qqnorm))
+        htgs["Normal Q-Q Plot"] = cfg.qqnorm.how_to_guide(plot_height, plot_width)
     if cfg.box.enable:
         box_data = {
             "grp": col,
@@ -1926,7 +1919,7 @@ def render_num(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
         value_table = []
 
     # panel.child.children[0] is a figure
-    for panel in tabs[0:]:
+    for panel in tabs[:]:
         panel.child.children[0].frame_width = int(plot_width * 0.9)
     if cfg.hist.enable:
         tabs[0].child.children[0].frame_width = int(plot_width_hist * 0.9)
@@ -1984,15 +1977,16 @@ def cont_insights(data: Dict[str, Any], col: str, cfg: Config) -> Dict[str, List
         if skw <= -cfg.insight.skewed__threshold:
             ins["Histogram"].append(f"{col} is skewed left (\u03B31 = {skw})")
 
-    if cfg.qqnorm.enable:
-        if data["norm"][1] <= 1 - cfg.insight.normal__threshold:
-            pval = data["norm"][1]
-            ins["Normal Q-Q Plot"].append(f"{col} is not normally distributed (p-value {pval})")
+    if (
+        cfg.qqnorm.enable
+        and data["norm"][1] <= 1 - cfg.insight.normal__threshold
+    ):
+        pval = data["norm"][1]
+        ins["Normal Q-Q Plot"].append(f"{col} is not normally distributed (p-value {pval})")
 
-    if cfg.box.enable:
-        if data["notlrs"] > cfg.insight.outlier__threshold:
-            notlrs = data["notlrs"]
-            ins["Box Plot"].append(f"{col} has {notlrs} outliers")
+    if cfg.box.enable and data["notlrs"] > cfg.insight.outlier__threshold:
+        notlrs = data["notlrs"]
+        ins["Box Plot"].append(f"{col} has {notlrs} outliers")
 
     return ins
 

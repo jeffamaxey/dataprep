@@ -341,8 +341,7 @@ def _insight_pagination(ins: List[Dict[str, str]]) -> Dict[int, List[Dict[str, s
     ins.sort(key=lambda x: ins_order.index(list(x.keys())[0]))
     # paginate the sorted insights
     page_count = int(np.ceil(len(ins) / 10))
-    paginated_ins: Dict[int, List[Dict[str, str]]] = dict()
-    for i in range(1, page_count + 1):
-        paginated_ins[i] = ins[(i - 1) * 10 : i * 10]
-
+    paginated_ins: Dict[int, List[Dict[str, str]]] = {
+        i: ins[(i - 1) * 10 : i * 10] for i in range(1, page_count + 1)
+    }
     return paginated_ins

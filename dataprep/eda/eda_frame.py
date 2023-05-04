@@ -134,9 +134,7 @@ class EDAFrame:
         self._nulls = dd_null.to_dask_array()
         self._nulls._chunks = self.values.chunks
         pd_null = dd_null.compute()
-        nulls_cnt = {}
-        for col in self._ddf.columns:
-            nulls_cnt[col] = pd_null[col].sum()
+        nulls_cnt = {col: pd_null[col].sum() for col in self._ddf.columns}
         self._nulls_cnt = nulls_cnt
 
         df.index = org_index
@@ -150,10 +148,7 @@ class EDAFrame:
     @property
     def dtypes(self) -> pd.Series:
         """Returns the dtypes of the DataFrame."""
-        if self._ddf is None:
-            return pd.DataFrame().dtypes
-        else:
-            return self._ddf.dtypes
+        return pd.DataFrame().dtypes if self._ddf is None else self._ddf.dtypes
 
     @property
     def nulls(self) -> da.Array:
@@ -235,8 +230,7 @@ class EDAFrame:
 
     def select_num_columns(self) -> "EDAFrame":
         """Return a new EDAFrame with numerical dtype columns."""
-        df = self.select_dtypes(NUMERICAL_DTYPES)
-        return df
+        return self.select_dtypes(NUMERICAL_DTYPES)
 
     def __getitem__(self, indexer: Union[Sequence[str], str]) -> "EDAFrame":
         """Return a new EDAFrame select by column names."""
@@ -288,7 +282,7 @@ def _process_column_name(df_columns: pd.Index) -> List[str]:
     """
     columns = list(map(str, df_columns))
     column_count = Counter(columns)
-    current_id: Dict[Any, int] = dict()
+    current_id: Dict[Any, int] = {}
     for i, col in enumerate(columns):
         if column_count[col] > 1:
             current_id[col] = current_id.get(col, 0) + 1

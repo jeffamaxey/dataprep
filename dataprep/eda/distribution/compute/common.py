@@ -19,8 +19,7 @@ def _gen_latlong(df: Union[pd.DataFrame, dd.DataFrame], x: LatLong) -> dd.Series
         name = f"{name}_{i}"
         i += 1
 
-    lat_long = pd.Series(zip(df[x.lat], df[x.long]), name=name)
-    return lat_long
+    return pd.Series(zip(df[x.lat], df[x.long]), name=name)
 
 
 def gen_new_df_with_used_cols(

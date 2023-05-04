@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_phone() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_phone": [
                 "555-234-5678",
@@ -37,7 +37,6 @@ def df_phone() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_phone: pd.DataFrame) -> None:

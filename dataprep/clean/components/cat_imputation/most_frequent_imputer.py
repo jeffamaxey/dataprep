@@ -53,8 +53,7 @@ class MostFrequentImputer:
             Provided data column.
         """
 
-        result = col_df.map(self.fillna)
-        return result
+        return col_df.map(self.fillna)
 
     def fit_transform(self, col_df: dd.Series) -> dd.Series:
         """
@@ -81,7 +80,6 @@ class MostFrequentImputer:
             Each value in dask's Series
         """
 
-        if not self.null_values is None:
-            if val in self.null_values:
-                return self.fill_value
+        if self.null_values is not None and val in self.null_values:
+            return self.fill_value
         return val

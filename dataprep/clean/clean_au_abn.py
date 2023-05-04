@@ -122,10 +122,7 @@ def validate_au_abn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(abn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(abn.is_valid)
-        else:
-            return df.applymap(abn.is_valid)
+        return df[column].apply(abn.is_valid) if column else df.applymap(abn.is_valid)
     return abn.is_valid(df)
 
 

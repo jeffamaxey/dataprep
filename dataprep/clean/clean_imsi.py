@@ -146,10 +146,11 @@ def validate_imsi(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(imsi.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(imsi.is_valid)
-        else:
-            return df.applymap(imsi.is_valid)
+        return (
+            df[column].apply(imsi.is_valid)
+            if column
+            else df.applymap(imsi.is_valid)
+        )
     return imsi.is_valid(df)
 
 
@@ -171,20 +172,12 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_imsi(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
         error_result = val if errors == "ignore" else np.nan
-        if split:
-            return [error_result, np.nan, np.nan, np.nan]
-        else:
-            return [error_result]
-
+        return [error_result, np.nan, np.nan, np.nan] if split else [error_result]
     if split:
         result = list(imsi.split(val))
 

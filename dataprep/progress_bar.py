@@ -174,11 +174,7 @@ class ProgressBar(Callback):  # type: ignore
             raise ValueError("ProgressBar already initialized.")
         ndone, ntasks = self._count_tasks()
 
-        if self._last_task is not None:
-            desc = f"Computing {self._last_task}"
-        else:
-            desc = ""
-
+        desc = f"Computing {self._last_task}" if self._last_task is not None else ""
         if self._width is None:
             self._pbar = tqdm(
                 total=ntasks,

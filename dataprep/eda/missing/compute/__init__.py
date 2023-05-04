@@ -78,7 +78,7 @@ def compute_missing(
         raise ValueError("x cannot be None while y has value")
     elif x is not None and y is None:
         ret = compute_missing_univariate(eda_frame, x, cfg)
-    elif x is not None and y is not None:
+    elif x is not None:
         ret = compute_missing_bivariate(eda_frame, x, y, cfg)
     else:
         ret = compute_missing_nullivariate(eda_frame, cfg)

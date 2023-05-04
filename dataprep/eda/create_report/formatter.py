@@ -73,15 +73,10 @@ def format_report(
     if len(df.index) == 0:
         return {}
     with ProgressBar(minimum=1, disable=not progress):
-        if mode == "basic":
-            edaframe = EDAFrame(df)
-            comps = format_basic(edaframe, cfg)
-        # elif mode == "full":
-        #     comps = format_full(df)
-        # elif mode == "minimal":
-        #     comps = format_mini(df)
-        else:
+        if mode != "basic":
             raise ValueError(f"Unknown mode: {mode}")
+        edaframe = EDAFrame(df)
+        comps = format_basic(edaframe, cfg)
     return comps
 
 
@@ -292,9 +287,13 @@ def format_basic(df: EDAFrame, cfg: Config) -> Dict[str, Any]:
     res_interaction = _format_interaction(data, cfg)
     res_correlations = _format_correlation(data, cfg)
     res_missing = _format_missing(data, cfg, completions, df.shape[1])
-    res = {**res_overview, **res_variables, **res_interaction, **res_correlations, **res_missing}
-
-    return res
+    return {
+        **res_overview,
+        **res_variables,
+        **res_interaction,
+        **res_correlations,
+        **res_missing,
+    }
 
 
 def _compute_variables(df: EDAFrame, cfg: Config) -> Dict[str, Any]:
@@ -319,8 +318,7 @@ def _compute_variables(df: EDAFrame, cfg: Config) -> Dict[str, Any]:
                 elif isinstance(dtype, Continuous):
                     data[col] = cont_comps(df.frame[col], cfg)
                 elif isinstance(dtype, DateTime):
-                    data[col] = {}
-                    data[col]["stats"] = calc_stats_dt(df.frame[col])
+                    data[col] = {"stats": calc_stats_dt(df.frame[col])}
                     data[col]["line"] = dask.delayed(_calc_line_dt)(df.frame[[col]], "auto")
                 else:
                     raise ValueError(f"unprocessed type in column{col}:{dtype}")
@@ -419,7 +417,7 @@ def basic_computations(
 
     # correlations
     if cfg.correlations.enable:
-        data.update(zip(("cordx", "cordy", "corrs"), correlation_nxn(df_num, cfg)))
+        data |= zip(("cordx", "cordy", "corrs"), correlation_nxn(df_num, cfg))
 
     # missing values
     completions = None

@@ -123,10 +123,7 @@ def validate_kr_brn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(brn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(brn.is_valid)
-        else:
-            return df.applymap(brn.is_valid)
+        return df[column].apply(brn.is_valid) if column else df.applymap(brn.is_valid)
     return brn.is_valid(df)
 
 

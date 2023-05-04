@@ -44,18 +44,14 @@ def simpledf() -> dd.DataFrame:
     np.random.shuffle(idx)
     df.iloc[idx[:500], 0] = None
 
-    ddf = to_dask(df)
-
-    return ddf
+    return to_dask(df)
 
 
 @pytest.fixture(scope="module")  # type: ignore
 def geodf() -> dd.DataFrame:
     df = df = load_dataset("countries")
 
-    ddf = to_dask(df)
-
-    return ddf
+    return to_dask(df)
 
 
 def test_sanity_compute_univariate(simpledf: dd.DataFrame) -> None:

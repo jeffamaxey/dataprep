@@ -23,11 +23,16 @@ def camelcase(string: str) -> str:
 
     """
 
-    string = re.sub(r"\w[\s\W]+\w", "", str(string))
-    if not string:
-        return string
-    return string[0].lower() + re.sub(
-        r"[\-_\.\s]([a-z])", lambda matched: matched.group(1).upper(), string[1:]
+    string = re.sub(r"\w[\s\W]+\w", "", string)
+    return (
+        string[0].lower()
+        + re.sub(
+            r"[\-_\.\s]([a-z])",
+            lambda matched: matched.group(1).upper(),
+            string[1:],
+        )
+        if string
+        else string
     )
 
 
@@ -101,11 +106,10 @@ def merge_values(  # pylint: disable=too-many-branches
         for key in rhs.keys():
             if key in lhs:
                 lhs[key] = merge_values(lhs[key], rhs[key], attr, policy)
+            elif isinstance(rhs[key], BaseDef):
+                lhs[key] = rhs[key].copy()
             else:
-                if isinstance(rhs[key], BaseDef):
-                    lhs[key] = rhs[key].copy()
-                else:
-                    lhs[key] = deepcopy(rhs[key])
+                lhs[key] = deepcopy(rhs[key])
         return lhs
     elif isinstance(lhs, (int, float, str, bool)):
         if policy.merge is None or policy.merge == "same":
@@ -125,7 +129,4 @@ def merge_values(  # pylint: disable=too-many-branches
 
 
 def coalesce(a: Optional[T], b: Optional[T]) -> Optional[T]:  # pylint: disable=invalid-name
-    if a is None:
-        return b
-    else:
-        return a
+    return b if a is None else a

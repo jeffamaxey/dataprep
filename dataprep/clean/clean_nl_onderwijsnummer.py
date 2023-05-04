@@ -125,10 +125,11 @@ def validate_nl_onderwijsnummer(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(onderwijsnummer.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(onderwijsnummer.is_valid)
-        else:
-            return df.applymap(onderwijsnummer.is_valid)
+        return (
+            df[column].apply(onderwijsnummer.is_valid)
+            if column
+            else df.applymap(onderwijsnummer.is_valid)
+        )
     return onderwijsnummer.is_valid(df)
 
 

@@ -126,10 +126,7 @@ def validate_lv_pvn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(pvn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(pvn.is_valid)
-        else:
-            return df.applymap(pvn.is_valid)
+        return df[column].apply(pvn.is_valid) if column else df.applymap(pvn.is_valid)
     return pvn.is_valid(df)
 
 

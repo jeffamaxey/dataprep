@@ -122,10 +122,7 @@ def validate_cr_cpj(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cpj.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cpj.is_valid)
-        else:
-            return df.applymap(cpj.is_valid)
+        return df[column].apply(cpj.is_valid) if column else df.applymap(cpj.is_valid)
     return cpj.is_valid(df)
 
 

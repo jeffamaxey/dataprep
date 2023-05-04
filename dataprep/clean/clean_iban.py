@@ -139,10 +139,11 @@ def validate_iban(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(iban.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(iban.is_valid)
-        else:
-            return df.applymap(iban.is_valid)
+        return (
+            df[column].apply(iban.is_valid)
+            if column
+            else df.applymap(iban.is_valid)
+        )
     return iban.is_valid(df)
 
 
@@ -164,20 +165,12 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_iban(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
         error_result = val if errors == "ignore" else np.nan
-        if split:
-            return [error_result, np.nan, np.nan, np.nan]
-        else:
-            return [error_result]
-
+        return [error_result, np.nan, np.nan, np.nan] if split else [error_result]
     if split:
         compacted_val = iban.compact(val)
         result = [compacted_val[:2], compacted_val[2:4], compacted_val[4:]]

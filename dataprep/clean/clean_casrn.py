@@ -128,10 +128,11 @@ def validate_casrn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(casrn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(casrn.is_valid)
-        else:
-            return df.applymap(casrn.is_valid)
+        return (
+            df[column].apply(casrn.is_valid)
+            if column
+            else df.applymap(casrn.is_valid)
+        )
     return casrn.is_valid(df)
 
 
@@ -161,6 +162,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [casrn.compact(val)] + result
-
-    return result
+    return [casrn.compact(val)] + result

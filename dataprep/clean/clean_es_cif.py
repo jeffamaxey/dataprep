@@ -138,10 +138,7 @@ def validate_es_cif(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cif.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cif.is_valid)
-        else:
-            return df.applymap(cif.is_valid)
+        return df[column].apply(cif.is_valid) if column else df.applymap(cif.is_valid)
     return cif.is_valid(df)
 
 
@@ -164,11 +161,7 @@ def _format(
     result: Any = []
 
     if val in NULL_VALUES:
-        if split:
-            return [np.nan, np.nan, np.nan, np.nan, np.nan]
-        else:
-            return [np.nan]
-
+        return [np.nan, np.nan, np.nan, np.nan, np.nan] if split else [np.nan]
     if not validate_es_cif(val):
         if errors == "raise":
             raise ValueError(f"Unable to parse value {val}")
@@ -180,7 +173,7 @@ def _format(
 
     if split:
         result = list(cif.split(val))
-        if len(result) == 0:
+        if not result:
             return [np.nan, np.nan, np.nan, np.nan, np.nan]
     if output_format in {"compact", "standard"}:
         result = [cif.compact(val)] + result

@@ -124,10 +124,11 @@ def validate_fi_veronumero(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(veronumero.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(veronumero.is_valid)
-        else:
-            return df.applymap(veronumero.is_valid)
+        return (
+            df[column].apply(veronumero.is_valid)
+            if column
+            else df.applymap(veronumero.is_valid)
+        )
     return veronumero.is_valid(df)
 
 

@@ -122,10 +122,7 @@ def validate_no_mva(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(mva.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(mva.is_valid)
-        else:
-            return df.applymap(mva.is_valid)
+        return df[column].apply(mva.is_valid) if column else df.applymap(mva.is_valid)
     return mva.is_valid(df)
 
 

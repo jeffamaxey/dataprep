@@ -173,10 +173,7 @@ def clean_df(
 
     df = df.reset_index(drop=True)
 
-    if data_type_detection != "none":
-        return df_datatype_detection, df
-    else:
-        return df
+    return (df_datatype_detection, df) if data_type_detection != "none" else df
 
 
 def _check_valid_values(data: str) -> bool:
@@ -239,9 +236,15 @@ def _infer_semantic_data_type(column: pd.Series) -> Any:
     # 3. For string and semantic data types (email, country, phone, etc.)
     default_infer_dtype = infer_dtype(column_not_na_subset)
 
-    semantic_data_type_dic = {"email": 0, "country": 0, "phone": 0, "ip": 0, "URL": 0, "address": 0}
+    semantic_data_type_dic = {
+        "country": 0,
+        "phone": 0,
+        "ip": 0,
+        "URL": 0,
+        "address": 0,
+        "email": sum(pd.Series(validate_email(column_not_na_subset)).tolist()),
+    }
 
-    semantic_data_type_dic["email"] = sum(pd.Series(validate_email(column_not_na_subset)).tolist())
     semantic_data_type_dic["country"] = sum(
         pd.Series(validate_country(column_not_na_subset)).tolist()
     )
@@ -342,9 +345,6 @@ def _standardize_missing_values_df(
         df.apply(_fill_missing_values_column, 0)
         df = df.convert_dtypes()
         df.dropna(how="any", inplace=True)
-    elif standardize_missing_values == "ignore":
-        pass
-
     return df
 
 
@@ -364,15 +364,7 @@ def _create_report_df(stats: Dict[str, Any], old_stat: Any, option: str) -> None
             "\tThese data types are supported by DataPrep to clean:",
             [k for k, v in stats.items() if v],
         )
-    if option == "header":
-        print("Column Headers Cleaning Report:")
-        if stats["cleaned"] > 0:
-            nclnd = stats["cleaned"]
-            pclnd = round(nclnd / old_stat * 100, 2)
-            print(f"\t{nclnd} values cleaned ({pclnd}%)")
-        else:
-            print("No Headers Cleaned.")
-    if option == "duplicate":
+    elif option == "duplicate":
         print("Number of Entries Cleaning Report:")
         if stats["cleaned"] > 0:
             nclnd = stats["cleaned"]
@@ -380,7 +372,15 @@ def _create_report_df(stats: Dict[str, Any], old_stat: Any, option: str) -> None
             print(f"\t{nclnd} entries dropped ({pclnd}%)")
         else:
             print("No Duplicated Entries Cleaned.")
-    if option == "memory":
+    elif option == "header":
+        print("Column Headers Cleaning Report:")
+        if stats["cleaned"] > 0:
+            nclnd = stats["cleaned"]
+            pclnd = round(nclnd / old_stat * 100, 2)
+            print(f"\t{nclnd} values cleaned ({pclnd}%)")
+        else:
+            print("No Headers Cleaned.")
+    elif option == "memory":
         print("Downcast Memory Report:")
         if stats["cleaned"] > 0:
             nclnd = stats["cleaned"]

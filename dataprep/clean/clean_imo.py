@@ -129,10 +129,7 @@ def validate_imo(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(imo.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(imo.is_valid)
-        else:
-            return df.applymap(imo.is_valid)
+        return df[column].apply(imo.is_valid) if column else df.applymap(imo.is_valid)
     return imo.is_valid(df)
 
 

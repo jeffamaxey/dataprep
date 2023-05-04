@@ -204,30 +204,24 @@ def _format_ip(val: Any, input_format: str, output_format: str, errors: str) -> 
         return val if errors == "ignore" else np.nan, 1
 
     # compressed version without the leading zeros (for ipv6 double colon for zeros)
-    if output_format == "compressed":
+    if output_format == "binary":
+        result = (
+            "{0:032b}".format(int(address))
+            if address.version == 4
+            else "{0:0128b}".format(int(address))
+        )
+    elif output_format == "compressed":
         result = address.compressed
 
-    # Converts the integer repesentation of the ip address to its hexadecimal
-    # form. Does not contain any dots or colons.
     elif output_format == "hexa":
         result = hex(int(address))
 
-    # converts the ip address to its binary representation
-    elif output_format == "binary":
-        if address.version == 4:
-            result = "{0:032b}".format(int(address))
-        else:
-            result = "{0:0128b}".format(int(address))
-
-    # converts to integer format
     elif output_format == "integer":
         result = int(address)
 
-    # converts to packed binary format (big-endian)
     elif output_format == "packed":
         result = address.packed
 
-    # convert to full representation
     else:
         dlm = "." if address.version == 4 else ":"  # delimiter
         result = dlm.join(f"{'0' * (4 - len(x))}{x}" for x in address.exploded.split(dlm))

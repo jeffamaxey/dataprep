@@ -75,13 +75,14 @@ class ConfigGeneratorUI:  # pylint: disable=too-many-instance-attributes
             layout={"width": "max-content"},
         )
 
-        request_box = VBox(
+        return VBox(
             [
                 _make_header(1, "API URL"),
-                Box(children=[self.url_area, self.request_type], layout=BOX_LAYOUT),
+                Box(
+                    children=[self.url_area, self.request_type], layout=BOX_LAYOUT
+                ),
             ]
         )
-        return request_box
 
     def _make_req_param(self) -> VBox:
         self.params_box = Textarea(
@@ -93,8 +94,7 @@ class ConfigGeneratorUI:  # pylint: disable=too-many-instance-attributes
         )
 
         carousel_2 = Box(children=[self.params_box], layout=BOX_LAYOUT)
-        param_box = VBox([_make_header(2, "Request Parameters"), carousel_2])
-        return param_box
+        return VBox([_make_header(2, "Request Parameters"), carousel_2])
 
     def _make_auth(self) -> VBox:
         self.authtype_box = RadioButtons(
@@ -115,8 +115,7 @@ class ConfigGeneratorUI:  # pylint: disable=too-many-instance-attributes
         )
 
         carousel_3 = Box(children=[self.authparams_box], layout=BOX_LAYOUT)
-        auth_box = VBox([_make_header(3, "Authorization"), self.authtype_box, carousel_3])
-        return auth_box
+        return VBox([_make_header(3, "Authorization"), self.authtype_box, carousel_3])
 
     def _make_pag(self) -> VBox:
         self.pagtype_box = RadioButtons(
@@ -136,8 +135,7 @@ class ConfigGeneratorUI:  # pylint: disable=too-many-instance-attributes
             layout={"width": "100%"},
         )
         carousel_4 = Box(children=[self.pagparams_box], layout=BOX_LAYOUT)
-        pag_box = VBox([_make_header(4, "Pagination"), self.pagtype_box, carousel_4])
-        return pag_box
+        return VBox([_make_header(4, "Pagination"), self.pagtype_box, carousel_4])
 
     def _make_result(self) -> VBox:
         send_button = Button(
@@ -193,10 +191,11 @@ class ConfigGeneratorUI:  # pylint: disable=too-many-instance-attributes
         authparams = None
         if self.authtype_box.value != "No Authorization":
             authparams = dict(_pairs(self.authparams_box.value))
-            authparams_user = {}
-            for key, value in authparams.items():
-                if key in ("client_id", "client_secret", "access_token"):
-                    authparams_user[key] = value
+            authparams_user = {
+                key: value
+                for key, value in authparams.items()
+                if key in ("client_id", "client_secret", "access_token")
+            }
             for key in ("client_id", "client_secret", "access_token"):
                 del authparams[key]
             authparams["type"] = self.authtype_box.value

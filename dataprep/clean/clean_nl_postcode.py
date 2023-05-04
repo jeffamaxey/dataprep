@@ -124,10 +124,11 @@ def validate_nl_postcode(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(postcode.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(postcode.is_valid)
-        else:
-            return df.applymap(postcode.is_valid)
+        return (
+            df[column].apply(postcode.is_valid)
+            if column
+            else df.applymap(postcode.is_valid)
+        )
     return postcode.is_valid(df)
 
 

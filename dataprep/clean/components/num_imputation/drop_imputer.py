@@ -54,9 +54,7 @@ class DropImputer:
             Provided data column.
         """
 
-        if not self.isdrop:
-            return col_df
-        return from_pandas(pd.Series([]), npartitions=2)
+        return from_pandas(pd.Series([]), npartitions=2) if self.isdrop else col_df
 
     def fit_transform(self, col_df: dd.Series) -> dd.Series:
         """
@@ -84,7 +82,4 @@ class DropImputer:
             Current value needs to be checked.
         """
 
-        if not self.null_values is None:
-            if val in self.null_values:
-                return True
-        return False
+        return self.null_values is not None and val in self.null_values

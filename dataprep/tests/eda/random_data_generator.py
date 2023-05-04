@@ -122,10 +122,13 @@ def gen_random_series(
     population_list = []
     for curr_type in gen_func:
         if dtype in [curr_type, "object"]:
-            if curr_type != "string":
-                rand_series = gen_func[curr_type](size, random_state=rand)
-            else:
-                rand_series = gen_func[curr_type](size, max_len=str_max_len, random_state=rand)
+            rand_series = (
+                gen_func[curr_type](size, random_state=rand)
+                if curr_type != "string"
+                else gen_func[curr_type](
+                    size, max_len=str_max_len, random_state=rand
+                )
+            )
             population_list.append(rand_series)
     object_population = pd.concat(population_list, ignore_index=True)
     object_series = pd.Series(rand.choice(object_population, size=size))
@@ -193,8 +196,11 @@ def gen_random_dataframe(
 def gen_test_df() -> pd.DataFrame:
     rand = np.random.RandomState(0)
     nrows = 30
-    data = {}
-    data[0] = gen_random_dataframe(nrows=nrows, ncols=10, random_state=rand).reset_index(drop=True)
+    data = {
+        0: gen_random_dataframe(
+            nrows=nrows, ncols=10, random_state=rand
+        ).reset_index(drop=True)
+    }
     data[1] = gen_random_dataframe(
         nrows=nrows, ncols=10, na_ratio=0.1, random_state=rand
     ).reset_index(drop=True)

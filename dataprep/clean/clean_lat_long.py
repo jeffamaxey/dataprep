@@ -292,9 +292,11 @@ def validate_lat_long(
 
     if lat or lon:
         hor_dir = "lat" if lat else "long"
-        if isinstance(x, pd.Series):
-            return x.apply(_check_lat_or_long, args=(False, hor_dir))
-        return _check_lat_or_long(x, False, hor_dir)
+        return (
+            x.apply(_check_lat_or_long, args=(False, hor_dir))
+            if isinstance(x, pd.Series)
+            else _check_lat_or_long(x, False, hor_dir)
+        )
     elif lat_long:
         if isinstance(x, pd.Series):
             return x.apply(_check_lat_long, args=(False,))
@@ -386,20 +388,20 @@ def _check_lat_long(val: Any, clean: bool) -> Any:
     # check if the value was able to be parsed
     if not mch:
         return (None,) * 8 + (1,) if clean else False
-    if not mch.group("deg") or not mch.group("deg2"):
+    if not mch["deg"] or not mch["deg2"]:
         return (None,) * 8 + (1,) if clean else False
 
     # coordinates for latitude
-    mins = float(mch.group("min")) if mch.group("min") else 0
-    secs = float(mch.group("sec")) if mch.group("sec") else 0
-    dds = float(mch.group("deg")) + mins / 60 + secs / 3600
-    hem = mch.group("dir_back") or mch.group("dir_front")
+    mins = float(mch["min"]) if mch["min"] else 0
+    secs = float(mch["sec"]) if mch["sec"] else 0
+    dds = float(mch["deg"]) + mins / 60 + secs / 3600
+    hem = mch["dir_back"] or mch["dir_front"]
 
     # coordinates for longitude
-    mins2 = float(mch.group("min2")) if mch.group("min2") else 0
-    secs2 = float(mch.group("sec2")) if mch.group("sec2") else 0
-    dds2 = float(mch.group("deg2")) + mins2 / 60 + secs2 / 3600
-    hem2 = mch.group("dir_back2") or mch.group("dir_front2")
+    mins2 = float(mch["min2"]) if mch["min2"] else 0
+    secs2 = float(mch["sec2"]) if mch["sec2"] else 0
+    dds2 = float(mch["deg2"]) + mins2 / 60 + secs2 / 3600
+    hem2 = mch["dir_back2"] or mch["dir_front2"]
 
     # minutes and seconds need to be in the interval [0, 60)
     # for degrees:
@@ -413,17 +415,18 @@ def _check_lat_long(val: Any, clean: bool) -> Any:
         or not 0 <= secs < 60
         or not 0 <= secs2 < 60
         or hem
-        and not 0 <= float(mch.group("deg")) <= 90
+        and not 0 <= float(mch["deg"]) <= 90
         or hem2
-        and not 0 <= float(mch.group("deg2")) <= 180
+        and not 0 <= float(mch["deg2"]) <= 180
         or not hem
-        and abs(float(mch.group("deg"))) > 90
+        and abs(float(mch["deg"])) > 90
         or not hem2
-        and abs(float(mch.group("deg2"))) > 180
+        and abs(float(mch["deg2"])) > 180
         or abs(dds) > 90
         or abs(dds2) > 180
-        or sum([mch.group("dir_back") is not None, mch.group("dir_front") is not None]) > 1
-        or sum([mch.group("dir_back2") is not None, mch.group("dir_front2") is not None]) > 1
+        or sum([mch["dir_back"] is not None, mch["dir_front"] is not None]) > 1
+        or sum([mch["dir_back2"] is not None, mch["dir_front2"] is not None])
+        > 1
     ):
         return (None,) * 8 + (1,) if clean else False
 
@@ -454,7 +457,7 @@ def _format_lat_or_long(val: Any, output_format: str, errors: str, hor_dir: str)
     if output_format == "dd":
         fctr = 1 if hem in {"N", "E"} else -1
         res = round(fctr * dds, 4)
-    if output_format == "ddh":
+    elif output_format == "ddh":
         res = f"{round(dds, 4)}{chr(176)} {hem}"
     elif output_format == "dm":
         mins = round(60 * (dds - int(dds)), 4)
@@ -482,14 +485,14 @@ def _check_lat_or_long(val: Any, clean: bool, hor_dir: str) -> Any:
     mch = re.match(pat, re.sub(r"''", r'"', str(val)))
     if not mch:
         return (None,) * 4 + (1,) if clean else False
-    if not mch.group("deg"):
+    if not mch["deg"]:
         return (None,) * 4 + (1,) if clean else False
 
     # coordinates
-    mins = float(mch.group("min")) if mch.group("min") else 0
-    secs = float(mch.group("sec")) if mch.group("sec") else 0
-    dds = float(mch.group("deg")) + mins / 60 + secs / 3600
-    hem = mch.group("dir_back") or mch.group("dir_front")
+    mins = float(mch["min"]) if mch["min"] else 0
+    secs = float(mch["sec"]) if mch["sec"] else 0
+    dds = float(mch["deg"]) + mins / 60 + secs / 3600
+    hem = mch["dir_back"] or mch["dir_front"]
 
     # range is [-90, 90] for latitude and [-180, 180] for longitude
     bound = 90 if hor_dir == "lat" else 180
@@ -504,11 +507,11 @@ def _check_lat_or_long(val: Any, clean: bool, hor_dir: str) -> Any:
         not 0 <= mins <= 60
         or not 0 <= secs <= 60
         or hem
-        and not 0 <= float(mch.group("deg")) <= bound
+        and not 0 <= float(mch["deg"]) <= bound
         or not hem
-        and abs(float(mch.group("deg"))) > bound
+        and abs(float(mch["deg"])) > bound
         or abs(dds) > bound
-        or sum([mch.group("dir_back") is not None, mch.group("dir_front") is not None]) > 1
+        or sum([mch["dir_back"] is not None, mch["dir_front"] is not None]) > 1
     ):
         return (None,) * 4 + (1,) if clean else False
 

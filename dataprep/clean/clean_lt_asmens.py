@@ -126,10 +126,11 @@ def validate_lt_asmens(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(asmens.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(asmens.is_valid)
-        else:
-            return df.applymap(asmens.is_valid)
+        return (
+            df[column].apply(asmens.is_valid)
+            if column
+            else df.applymap(asmens.is_valid)
+        )
     return asmens.is_valid(df)
 
 

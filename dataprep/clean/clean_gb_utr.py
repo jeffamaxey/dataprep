@@ -124,10 +124,7 @@ def validate_gb_utr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(utr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(utr.is_valid)
-        else:
-            return df.applymap(utr.is_valid)
+        return df[column].apply(utr.is_valid) if column else df.applymap(utr.is_valid)
     return utr.is_valid(df)
 
 

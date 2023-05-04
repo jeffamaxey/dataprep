@@ -124,10 +124,11 @@ def validate_no_kontonr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(kontonr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(kontonr.is_valid)
-        else:
-            return df.applymap(kontonr.is_valid)
+        return (
+            df[column].apply(kontonr.is_valid)
+            if column
+            else df.applymap(kontonr.is_valid)
+        )
     return kontonr.is_valid(df)
 
 

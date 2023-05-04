@@ -42,37 +42,27 @@ class Srs(UserList):
         super().__init__()
         if agg:
             self.data = srs
+        elif len(srs.shape) > 1:
+            self.data: List[dd.Series] = [srs.iloc[:, loc] for loc in range(srs.shape[1])]
         else:
-            if len(srs.shape) > 1:
-                self.data: List[dd.Series] = [srs.iloc[:, loc] for loc in range(srs.shape[1])]
-            else:
-                self.data: List[dd.Series] = [srs]
+            self.data: List[dd.Series] = [srs]
 
     def __getattr__(self, attr: str) -> UserList:
-        output = []
-        for srs in self.data:
-            output.append(getattr(srs, attr))
+        output = [getattr(srs, attr) for srs in self.data]
         return Srs(output, agg=True)
 
     def apply(self, method: str, *params: Optional[Any], **kwargs: Optional[Any]) -> UserList:
         """
         Apply the same method for all elements in the list.
         """
-        output = []
-        for srs in self.data:
-            output.append(getattr(srs, method)(*params, **kwargs))
-
+        output = [getattr(srs, method)(*params, **kwargs) for srs in self.data]
         return Srs(output, agg=True)
 
     def getidx(self, ind: Union[str, int]) -> List[Any]:
         """
         Get the specified index for all elements in the list.
         """
-        output = []
-        for data in self.data:
-            output.append(data[ind])
-
-        return output
+        return [data[ind] for data in self.data]
 
     def getmask(
         self, mask: Union[List[dd.Series], UserList], inverse: bool = False
@@ -108,10 +98,10 @@ class Srs(UserList):
                     rslt.append(None)
             return rslt
         elif multi_args:
-            rslt = []
-            for args, data in zip(multi_args, self.data):
-                rslt.append(func(data, args, **kwargs))
-            return rslt
+            return [
+                func(data, args, **kwargs)
+                for args, data in zip(multi_args, self.data)
+            ]
         else:
             return [func(srs, **kwargs) for srs in self.data]
 
@@ -138,11 +128,7 @@ def compare_multiple_col(
     srs = Srs(aligned_dfs[x])
     data: List[Any] = []
     col_dtype = srs.self_map(detect_dtype)
-    if len(col_dtype) > 1:
-        col_dtype = col_dtype[baseline]
-    else:
-        col_dtype = col_dtype[0]
-
+    col_dtype = col_dtype[baseline] if len(col_dtype) > 1 else col_dtype[0]
     if is_dtype(col_dtype, Continuous()):
         data.append((_cont_calcs(srs.apply("dropna"), cfg, df_list, x)))
         stats = calc_stats_cont(srs, cfg)
@@ -169,9 +155,10 @@ def _cont_calcs(srs: Srs, cfg: Config, df_list: List[dd.DataFrame], x: str) -> D
         "map_partitions", lambda x: pd.Series([x.max(), x.min()]), meta=pd.Series([], dtype=float)
     ).data
     if cfg.kde.enable:
-        min_max_comp = []
-        for min_max_value in dask.compute(min_max)[0]:
-            min_max_comp.append(math.isclose(min_max_value.min(), min_max_value.max()))
+        min_max_comp = [
+            math.isclose(min_max_value.min(), min_max_value.max())
+            for min_max_value in dask.compute(min_max)[0]
+        ]
     min_max = dd.concat(min_max).repartition(npartitions=1)
 
     # histogram

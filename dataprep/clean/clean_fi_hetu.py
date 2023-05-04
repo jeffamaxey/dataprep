@@ -123,10 +123,11 @@ def validate_fi_hetu(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(hetu.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(hetu.is_valid)
-        else:
-            return df.applymap(hetu.is_valid)
+        return (
+            df[column].apply(hetu.is_valid)
+            if column
+            else df.applymap(hetu.is_valid)
+        )
     return hetu.is_valid(df)
 
 

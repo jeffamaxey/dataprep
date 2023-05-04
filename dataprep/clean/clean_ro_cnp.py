@@ -125,10 +125,7 @@ def validate_ro_cnp(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cnp.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cnp.is_valid)
-        else:
-            return df.applymap(cnp.is_valid)
+        return df[column].apply(cnp.is_valid) if column else df.applymap(cnp.is_valid)
     return cnp.is_valid(df)
 
 

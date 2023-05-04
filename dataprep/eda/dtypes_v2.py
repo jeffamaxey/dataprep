@@ -181,15 +181,15 @@ def map_dtype(dtype: DType) -> DType:
     We will map Categorical() to Nominal() and Numerical() to Continuous()
     """
     if (
-        isinstance(dtype, Categorical) is True
-        and isinstance(dtype, Ordinal) is False
-        and isinstance(dtype, Nominal) is False
+        isinstance(dtype, Categorical)
+        and not isinstance(dtype, Ordinal)
+        and not isinstance(dtype, Nominal)
     ):
         return Nominal()
     elif (
-        isinstance(dtype, Numerical) is True
-        and isinstance(dtype, Continuous) is False
-        and isinstance(dtype, Discrete) is False
+        isinstance(dtype, Numerical)
+        and not isinstance(dtype, Continuous)
+        and not isinstance(dtype, Discrete)
     ):
         return Continuous()
     else:
@@ -210,11 +210,7 @@ def detect_without_known(col: Union[dd.Series, pd.Series], head: pd.Series) -> D
             nuniques = col.nunique()
         else:
             raise TypeError(f"unprocessed column type:{type(col)}")
-        if nuniques < 10:
-            return SmallCardNum()
-        else:
-            return Continuous()
-
+        return SmallCardNum() if nuniques < 10 else Continuous()
     elif is_datetime(col.dtype):
         return DateTime()
     elif is_geography(head):
@@ -342,10 +338,7 @@ def drop_null(
     """
 
     if isinstance(var, (pd.Series, dd.Series)):
-        if is_datetime(var.dtype):
-            return var.dropna()
-        return var[~var.isin(NULL_VALUES)]
-
+        return var.dropna() if is_datetime(var.dtype) else var[~var.isin(NULL_VALUES)]
     elif isinstance(var, (pd.DataFrame, dd.DataFrame)):
         df = var
         for values in df.columns:

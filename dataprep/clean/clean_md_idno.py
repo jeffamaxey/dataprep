@@ -123,10 +123,11 @@ def validate_md_idno(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(idno.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(idno.is_valid)
-        else:
-            return df.applymap(idno.is_valid)
+        return (
+            df[column].apply(idno.is_valid)
+            if column
+            else df.applymap(idno.is_valid)
+        )
     return idno.is_valid(df)
 
 

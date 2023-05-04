@@ -341,11 +341,8 @@ def geop_cont_comps(df: dd.DataFrame) -> Dict[str, Any]:
     df
         Dask dataframe with one geography and one numerical column
     """
-    data: Dict[str, Any] = {}
     x, y = df.columns
-    # group the data to compute the mean
-    data["value"] = df.groupby(x)[y].mean()
-
+    data: Dict[str, Any] = {"value": df.groupby(x)[y].mean()}
     return data
 
 
@@ -357,13 +354,7 @@ def _calc_box_cont(df: dd.DataFrame, cfg: Config) -> dd.Series:
     # group the data into intervals
     # https://stackoverflow.com/questions/42442043/how-to-use-pandas-cut-or-equivalent-in-dask-efficiently
     df["grp"] = df[x].map_partitions(pd.cut, bins=cfg.box.bins, include_lowest=True)
-    # TODO is this calculating the box plot stats for each group in parallel?
-    # https://examples.dask.org/dataframes/02-groupby.html#Groupby-Apply
-    # https://github.com/dask/dask/issues/4239
-    # https://github.com/dask/dask/issues/5124
-    srs = df.groupby("grp")[y].apply(_box_comps, meta=object)
-
-    return srs
+    return df.groupby("grp")[y].apply(_box_comps, meta=object)
 
 
 def _box_comps(srs: pd.Series) -> Dict[str, Union[float, np.array]]:
@@ -373,7 +364,7 @@ def _box_comps(srs: pd.Series) -> Dict[str, Union[float, np.array]]:
     data: Dict[str, Any] = {}
 
     # quartiles
-    data.update(zip(("q1", "q2", "q3"), srs.quantile([0.25, 0.5, 0.75])))
+    data |= zip(("q1", "q2", "q3"), srs.quantile([0.25, 0.5, 0.75]))
     iqr = data["q3"] - data["q1"]
     # inliers
     srs_iqr = srs[srs.between(data["q1"] - 1.5 * iqr, data["q3"] + 1.5 * iqr)]

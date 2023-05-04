@@ -28,9 +28,7 @@ class TableIndex:
     def getType(self):
         if self.isPrimaryKey():
             return "Primary key"
-        if self.isUniqueKey():
-            return "Must be unique"
-        return "Performance"
+        return "Must be unique" if self.isUniqueKey() else "Performance"
 
     def getIndexType(self):
         return self.indexType

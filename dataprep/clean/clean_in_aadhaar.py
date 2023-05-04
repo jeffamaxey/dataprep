@@ -126,10 +126,11 @@ def validate_in_aadhaar(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(aadhaar.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(aadhaar.is_valid)
-        else:
-            return df.applymap(aadhaar.is_valid)
+        return (
+            df[column].apply(aadhaar.is_valid)
+            if column
+            else df.applymap(aadhaar.is_valid)
+        )
     return aadhaar.is_valid(df)
 
 

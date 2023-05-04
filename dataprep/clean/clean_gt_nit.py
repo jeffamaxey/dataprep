@@ -122,10 +122,7 @@ def validate_gt_nit(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nit.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nit.is_valid)
-        else:
-            return df.applymap(nit.is_valid)
+        return df[column].apply(nit.is_valid) if column else df.applymap(nit.is_valid)
     return nit.is_valid(df)
 
 

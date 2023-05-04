@@ -122,10 +122,11 @@ def validate_es_cups(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cups.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cups.is_valid)
-        else:
-            return df.applymap(cups.is_valid)
+        return (
+            df[column].apply(cups.is_valid)
+            if column
+            else df.applymap(cups.is_valid)
+        )
     return cups.is_valid(df)
 
 

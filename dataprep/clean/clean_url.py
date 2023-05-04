@@ -224,7 +224,7 @@ def _format_url(
 
     # regex for finding the query / params and values
     re_queries = re.findall(QUERY_REGEX, url)
-    all_queries = dict((y, z) for _, y, z in re_queries)
+    all_queries = {y: z for _, y, z in re_queries}
 
     # initialize the removed authentication code and count for the stats
     rem_auth_code, rem_auth_cnt = 2, 0

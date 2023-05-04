@@ -130,10 +130,11 @@ def validate_bitcoin(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(bitcoin.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(bitcoin.is_valid)
-        else:
-            return df.applymap(bitcoin.is_valid)
+        return (
+            df[column].apply(bitcoin.is_valid)
+            if column
+            else df.applymap(bitcoin.is_valid)
+        )
     return bitcoin.is_valid(df)
 
 
@@ -163,6 +164,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [bitcoin.compact(val)] + result
-
-    return result
+    return [bitcoin.compact(val)] + result

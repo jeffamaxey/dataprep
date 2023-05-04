@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_text() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "text": [
                 "'ZZZZZ!' If IMDb would allow one-word reviews, that's what mine would be.",
@@ -33,7 +33,6 @@ def df_text() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_text: pd.DataFrame) -> None:
@@ -89,7 +88,7 @@ def test_clean_custom(df_text: pd.DataFrame) -> None:
 
 def test_clean_user(df_text: pd.DataFrame) -> None:
     def swapcase(text: str) -> str:
-        return str(text).swapcase()
+        return text.swapcase()
 
     def replace_z(text: str, value: str) -> str:
         return re.sub(r"[zZ]", value, text)

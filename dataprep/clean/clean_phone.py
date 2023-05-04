@@ -251,16 +251,16 @@ def _format_phone(
         ext_num = ext_num if ext_num else np.nan
         return country_code, area_code, office_code, station_code, ext_num, 2
 
-    if output_format == "nanp":  # NPA-NXX-XXXX
-        area_code = f"{area_code}-" if area_code else ""
-        ext_num = f" ext. {ext_num}" if ext_num else ""
-        result = f"{area_code}{office_code}-{station_code}{ext_num}"
-    elif output_format == "e164":  # +1NPANXXXXXX
+    if output_format == "e164":
         country_code = "+1" if area_code else ""
         area_code = area_code if area_code else ""
         ext_num = f" ext. {ext_num}" if ext_num else ""
         result = f"{country_code}{area_code}{office_code}{station_code}{ext_num}"
-    elif output_format == "national":  # (NPA) NXX-XXXX
+    elif output_format == "nanp":
+        area_code = f"{area_code}-" if area_code else ""
+        ext_num = f" ext. {ext_num}" if ext_num else ""
+        result = f"{area_code}{office_code}-{station_code}{ext_num}"
+    elif output_format == "national":
         area_code = f"({area_code}) " if area_code else ""
         ext_num = f" ext. {ext_num}" if ext_num else ""
         result = f"{area_code}{office_code}-{station_code}{ext_num}"
@@ -293,11 +293,11 @@ def _check_phone(phone: Any, clean: bool) -> Any:
     # Check if the value was able to be parsed
     if not mch:
         return (None,) * 5 + ("unknown",) if clean else False
-    if mch.group("country") and not mch.group("area"):
+    if mch["country"] and not mch["area"]:
         return (None,) * 5 + ("unknown",) if clean else False
-    if mch.group("letters"):
+    if mch["letters"]:
         # Check that there are 7 alphanumeric characters present
-        letters = re.sub(r"\W+", "", mch.group("letters"))
+        letters = re.sub(r"\W+", "", mch["letters"])
         if len(letters) != 7:
             return (None,) * 5 + ("unknown",) if clean else False
         # Convert letters to numbers
@@ -305,11 +305,11 @@ def _check_phone(phone: Any, clean: bool) -> Any:
         numbers = "".join(numlist)
 
     # Components for phone number
-    country_code = mch.group("country")
-    area_code = mch.group("area")
-    office_code = numbers[:3] if mch.group("letters") else mch.group("office")
-    station_code = numbers[3:] if mch.group("letters") else mch.group("station")
-    ext_num = mch.group("ext")
+    country_code = mch["country"]
+    area_code = mch["area"]
+    office_code = numbers[:3] if mch["letters"] else mch["office"]
+    station_code = numbers[3:] if mch["letters"] else mch["station"]
+    ext_num = mch["ext"]
 
     return (
         (country_code, area_code, office_code, station_code, ext_num, "success") if clean else True

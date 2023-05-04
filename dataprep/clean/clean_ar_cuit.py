@@ -133,10 +133,11 @@ def validate_ar_cuit(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cuit.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cuit.is_valid)
-        else:
-            return df.applymap(cuit.is_valid)
+        return (
+            df[column].apply(cuit.is_valid)
+            if column
+            else df.applymap(cuit.is_valid)
+        )
     return cuit.is_valid(df)
 
 

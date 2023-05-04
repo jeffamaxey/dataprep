@@ -44,9 +44,7 @@ def simpledf() -> pd.DataFrame:
 
 @pytest.fixture(scope="module")  # type: ignore
 def constantdf() -> pd.DataFrame:
-    df = pd.DataFrame({"a": [0] * 10, "b": [1] * 10, "c": [np.nan] * 10})
-
-    return df
+    return pd.DataFrame({"a": [0] * 10, "b": [1] * 10, "c": [np.nan] * 10})
 
 
 def test_report(simpledf: pd.DataFrame) -> None:

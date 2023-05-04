@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_ips() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_ip": [
                 "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -28,7 +28,6 @@ def df_ips() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 # input_formats tests

@@ -124,10 +124,11 @@ def validate_cn_uscc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(uscc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(uscc.is_valid)
-        else:
-            return df.applymap(uscc.is_valid)
+        return (
+            df[column].apply(uscc.is_valid)
+            if column
+            else df.applymap(uscc.is_valid)
+        )
     return uscc.is_valid(df)
 
 

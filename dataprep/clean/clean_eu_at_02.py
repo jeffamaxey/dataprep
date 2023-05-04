@@ -123,10 +123,11 @@ def validate_eu_at_02(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(at_02.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(at_02.is_valid)
-        else:
-            return df.applymap(at_02.is_valid)
+        return (
+            df[column].apply(at_02.is_valid)
+            if column
+            else df.applymap(at_02.is_valid)
+        )
     return at_02.is_valid(df)
 
 

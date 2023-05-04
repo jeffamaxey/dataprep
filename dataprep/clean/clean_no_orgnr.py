@@ -122,10 +122,11 @@ def validate_no_orgnr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(orgnr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(orgnr.is_valid)
-        else:
-            return df.applymap(orgnr.is_valid)
+        return (
+            df[column].apply(orgnr.is_valid)
+            if column
+            else df.applymap(orgnr.is_valid)
+        )
     return orgnr.is_valid(df)
 
 

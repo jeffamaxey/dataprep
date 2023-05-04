@@ -126,10 +126,11 @@ def validate_gb_sedol(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(sedol.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(sedol.is_valid)
-        else:
-            return df.applymap(sedol.is_valid)
+        return (
+            df[column].apply(sedol.is_valid)
+            if column
+            else df.applymap(sedol.is_valid)
+        )
     return sedol.is_valid(df)
 
 

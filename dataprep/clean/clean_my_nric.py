@@ -126,10 +126,11 @@ def validate_my_nric(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nric.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nric.is_valid)
-        else:
-            return df.applymap(nric.is_valid)
+        return (
+            df[column].apply(nric.is_valid)
+            if column
+            else df.applymap(nric.is_valid)
+        )
     return nric.is_valid(df)
 
 

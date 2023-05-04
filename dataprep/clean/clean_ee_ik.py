@@ -126,10 +126,7 @@ def validate_ee_ik(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ik.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ik.is_valid)
-        else:
-            return df.applymap(ik.is_valid)
+        return df[column].apply(ik.is_valid) if column else df.applymap(ik.is_valid)
     return ik.is_valid(df)
 
 

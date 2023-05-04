@@ -139,8 +139,9 @@ def _get_data(currency_code: str, file_path: str) -> Any:
     """
     with open(file_path) as f:
         currency_data = json.loads(f.read())
-    currency_dict = next((item for item in currency_data if item["cc"] == currency_code), None)
-    if currency_dict:
+    if currency_dict := next(
+        (item for item in currency_data if item["cc"] == currency_code), None
+    ):
         symbol = currency_dict.get("symbol")
         currency_name = currency_dict.get("name")
         return symbol, currency_name
@@ -159,12 +160,12 @@ def _get_rate(base_cur: str, dest_cur: str, url: str) -> Any:
 
     if response.status == 200:
         response_json = json.loads(response.read())
-        rate = np.round(response_json["rates"][dest_cur], 4)
-        if not rate:
+        if rate := np.round(response_json["rates"][dest_cur], 4):
+            return rate
+        else:
             raise RatesNotAvailableError(
                 f"Currency Rate {base_cur} => {dest_cur} not available latest"
             )
-        return rate
     raise RatesNotAvailableError("Currency Rates Source Not Ready / Available")
 
 
@@ -180,12 +181,12 @@ def _get_rate_crypto(base_cur: str, dest_cur: str, url: str) -> Any:
 
     if response.status == 200:
         response_json = json.loads(response.read())
-        rate = response_json[base_cur][dest_cur]
-        if not rate:
+        if rate := response_json[base_cur][dest_cur]:
+            return rate
+        else:
             raise RatesNotAvailableError(
                 f"Currency Rate {base_cur} => {dest_cur} not available latest"
             )
-        return rate
     raise RatesNotAvailableError("Currency Rates Source Not Ready / Available")
 
 

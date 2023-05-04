@@ -124,10 +124,7 @@ def validate_es_ccc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ccc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ccc.is_valid)
-        else:
-            return df.applymap(ccc.is_valid)
+        return df[column].apply(ccc.is_valid) if column else df.applymap(ccc.is_valid)
     return ccc.is_valid(df)
 
 

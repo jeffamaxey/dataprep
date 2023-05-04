@@ -51,7 +51,7 @@ def read_sql(
     >>> read_sql(db_url, query, partition_on="partition_col", partition_num=10)
     """
     if _WITH_CX:
-        df = cx.read_sql(
+        return cx.read_sql(
             conn=conn,
             query=query,
             return_type=return_type,
@@ -60,6 +60,5 @@ def read_sql(
             partition_range=partition_range,
             partition_num=partition_num,
         )
-        return df
     else:
         raise ImportError("connectorx is not installed." "Please run pip install connectorx")

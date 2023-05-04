@@ -123,10 +123,7 @@ def validate_ie_pps(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(pps.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(pps.is_valid)
-        else:
-            return df.applymap(pps.is_valid)
+        return df[column].apply(pps.is_valid) if column else df.applymap(pps.is_valid)
     return pps.is_valid(df)
 
 

@@ -52,8 +52,7 @@ class MeanImputer:
             Provided data column.
         """
 
-        result = col_df.map(self.fillna)
-        return result
+        return col_df.map(self.fillna)
 
     def fit_transform(self, col_df: dd.Series) -> dd.Series:
         """
@@ -82,6 +81,4 @@ class MeanImputer:
 
         if isinstance(val, str) and val in self.null_values:
             return self.mean
-        if math.isnan(float(val)):
-            return self.mean
-        return val
+        return self.mean if math.isnan(float(val)) else val

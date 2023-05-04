@@ -17,8 +17,8 @@ def staged(
     """Transform a two stage computation into a result and a completion function."""
 
     def staged_imp(
-        *args: Any, _staged: bool = False, **kwargs: Any
-    ) -> Union[Tuple[Any, Completion], Intermediate]:
+            *args: Any, _staged: bool = False, **kwargs: Any
+        ) -> Union[Tuple[Any, Completion], Intermediate]:
         gen = func(*args, **kwargs)
 
         def completion(computed: Any) -> Intermediate:
@@ -30,8 +30,7 @@ def staged(
 
         if _staged:
             return next(gen), completion
-        else:
-            (computed,) = dask.compute(next(gen))
-            return completion(computed)
+        (computed,) = dask.compute(next(gen))
+        return completion(computed)
 
     return staged_imp

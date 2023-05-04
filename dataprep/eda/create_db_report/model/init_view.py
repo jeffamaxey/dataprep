@@ -9,7 +9,7 @@ class View(Table):
         self.setViewDefinition(view_def)
 
     def setViewDefinition(self, view_definition: str):
-        if view_definition is not None and len(view_definition.strip()) > 0:
+        if view_definition is not None and view_definition.strip() != "":
             self.viewDefinition = view_definition
 
     def getViewDefinition(self):

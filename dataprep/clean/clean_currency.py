@@ -282,30 +282,26 @@ def _format_currency(
         elif status == "unknown":
             if errors == "raise":
                 raise ValueError(f"Unable to parse value {val}")
-            return (
-                (np.nan, val, np.nan, np.nan, np.nan, 1)
-                if errors == "ignore"
-                else (np.nan, np.nan, np.nan, np.nan, np.nan, 1)
-            )
-        else:
-            if target_symbol != "null":
-                return (input_symbol, val, conversion_rate, target_symbol, val_new, 2)
             else:
-                return (input_symbol, val, 2)
+                return (
+                    (np.nan, val, np.nan, np.nan, np.nan, 1)
+                    if errors == "ignore"
+                    else (np.nan, np.nan, np.nan, np.nan, np.nan, 1)
+                )
+        elif target_symbol != "null":
+            return (input_symbol, val, conversion_rate, target_symbol, val_new, 2)
+        else:
+            return (input_symbol, val, 2)
 
     else:
         if status == "null":
             return np.nan, 0
 
-        if status == "unknown":
-            if errors == "raise":
-                raise ValueError(f"Unable to parse value {val}")
-            return val if errors == "ignore" else np.nan, 1
-        else:
-            if target_symbol != "null":
-                return val_new, 2
-            else:
-                return val, 2
+        if status != "unknown":
+            return (val_new, 2) if target_symbol != "null" else (val, 2)
+        if errors == "raise":
+            raise ValueError(f"Unable to parse value {val}")
+        return val if errors == "ignore" else np.nan, 1
 
 
 def validate_currency(
@@ -376,20 +372,20 @@ def _get_values_target_representation(
     #   1. for fiat-to-fiat and crypto-to-fiat we multiply
     #   2. for fiat-to-crypto we divide
 
-    if conversion_type in ("fiat_to_fiat", "crypto_to_fiat"):
+    if conversion_type in {"fiat_to_fiat", "crypto_to_fiat"}:
         val_new = val * conversion_rate
     else:
         val_new = val / conversion_rate
 
-    if target_representation == "abbr":
-        val = "{:,.{a}f}".format(val, a=n_round)
-        target_val = "{:,.{a}f}".format(val_new, a=n_round)
-        if split:
-            return val, target_val
-        else:
-            return input_symbol.upper() + str(val), target_symbol.upper() + str(target_val)
-    else:
+    if target_representation != "abbr":
         return np.round(val, n_round), np.round(val_new, n_round)
+    val = "{:,.{a}f}".format(val, a=n_round)
+    target_val = "{:,.{a}f}".format(val_new, a=n_round)
+    return (
+        (val, target_val)
+        if split
+        else (input_symbol.upper() + val, target_symbol.upper() + target_val)
+    )
 
 
 def _check_params(

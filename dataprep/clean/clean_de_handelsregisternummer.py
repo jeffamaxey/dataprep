@@ -125,10 +125,11 @@ def validate_de_handelsregisternummer(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(handelsregisternummer.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(handelsregisternummer.is_valid)
-        else:
-            return df.applymap(handelsregisternummer.is_valid)
+        return (
+            df[column].apply(handelsregisternummer.is_valid)
+            if column
+            else df.applymap(handelsregisternummer.is_valid)
+        )
     return handelsregisternummer.is_valid(df)
 
 

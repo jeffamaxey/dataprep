@@ -122,10 +122,11 @@ def validate_fi_ytunnus(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ytunnus.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ytunnus.is_valid)
-        else:
-            return df.applymap(ytunnus.is_valid)
+        return (
+            df[column].apply(ytunnus.is_valid)
+            if column
+            else df.applymap(ytunnus.is_valid)
+        )
     return ytunnus.is_valid(df)
 
 

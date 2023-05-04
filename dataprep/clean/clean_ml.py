@@ -92,13 +92,14 @@ def clean_ml(
         num_null_value = list(NULL_VALUES)
     training_df = to_dask(training_df)
     test_df = to_dask(test_df)
-    col_names = []
-    for label, _ in training_df.items():  # doctest: +SKIP
-        col_names.append(label)
+    col_names = [label for label, _ in training_df.items()]
     for col_name in col_names:
         if col_name == target:
             continue
-        if not customized_cat_pipeline is None and customized_num_pipeline is None:
+        if (
+            customized_cat_pipeline is not None
+            and customized_num_pipeline is None
+        ):
             temp_training_df, temp_test_df = format_data_with_customized_cat(
                 training_df[col_name].compute(),
                 test_df[col_name].compute(),
@@ -111,7 +112,10 @@ def clean_ml(
                 exclude_operators,
                 customized_cat_pipeline,
             )
-        elif customized_cat_pipeline is None and not customized_num_pipeline is None:
+        elif (
+            customized_cat_pipeline is None
+            and customized_num_pipeline is not None
+        ):
             temp_training_df, temp_test_df = format_data_with_customized_num(
                 training_df[col_name].compute(),
                 test_df[col_name].compute(),
@@ -123,7 +127,7 @@ def clean_ml(
                 exclude_operators,
                 customized_num_pipeline,
             )
-        elif customized_cat_pipeline is None and customized_num_pipeline is None:
+        elif customized_cat_pipeline is None:
             temp_training_df, temp_test_df = format_data_with_default(
                 training_df[col_name].compute(),
                 test_df[col_name].compute(),
@@ -139,7 +143,7 @@ def clean_ml(
                 include_operators,
                 exclude_operators,
             )
-        elif not customized_cat_pipeline is None and not customized_num_pipeline is None:
+        else:
             temp_training_df, temp_test_df = format_data_with_customized_cat_and_num(
                 training_df[col_name].compute(),
                 test_df[col_name].compute(),
@@ -213,7 +217,7 @@ def format_data_with_customized_cat(
     cat_pipe_info: Dict[str, Any] = {}
     cat_pipeline = []
 
-    if not customized_cat_pipeline is None:
+    if customized_cat_pipeline is not None:
         for item in customized_cat_pipeline:
             (component_key,) = item
             cat_pipeline.append(component_key)
@@ -221,10 +225,9 @@ def format_data_with_customized_cat(
         for item in customized_cat_pipeline:
             (component_key,) = item
             if (
-                not exclude_operators is None
+                exclude_operators is not None
                 and item[component_key]["operator"] in exclude_operators
-            ) or (
-                not include_operators is None
+                or include_operators is not None
                 and item[component_key]["operator"] not in include_operators
             ):
                 cat_pipe_info[component_key] = None
@@ -246,8 +249,11 @@ def format_data_with_customized_cat(
         num_pipe_info["variance"] = variance
     else:
         num_pipe_info["num_pipeline"] = ["num_imputation", "num_scaling"]
-    if (not exclude_operators is None and num_imputation in exclude_operators) or (
-        not include_operators is None and num_imputation not in include_operators
+    if (
+        exclude_operators is not None
+        and num_imputation in exclude_operators
+        or include_operators is not None
+        and num_imputation not in include_operators
     ):
         num_pipe_info["num_imputation"] = None
         num_pipe_info["num_null_value"] = None
@@ -255,8 +261,11 @@ def format_data_with_customized_cat(
         num_pipe_info["num_imputation"] = num_imputation
         num_pipe_info["num_null_value"] = num_null_value
 
-    if (not exclude_operators is None and num_scaling in exclude_operators) or (
-        not include_operators is None and num_scaling not in include_operators
+    if (
+        exclude_operators is not None
+        and num_scaling in exclude_operators
+        or include_operators is not None
+        and num_scaling not in include_operators
     ):
         num_pipe_info["num_scaling"] = None
     else:
@@ -316,11 +325,15 @@ def format_data_with_customized_num(
     customized_num_pipeline
         User-specified pipeline managing numerical columns.
     """
-    cat_pipe_info: Dict[str, Any] = {}
-    cat_pipe_info["cat_pipeline"] = ["cat_imputation", "cat_encoding"]
+    cat_pipe_info: Dict[str, Any] = {
+        "cat_pipeline": ["cat_imputation", "cat_encoding"]
+    }
     # cat_pipe_info['cat_pipeline'] = ['cat_imputation']
-    if (not exclude_operators is None and cat_imputation in exclude_operators) or (
-        not include_operators is None and cat_imputation not in include_operators
+    if (
+        exclude_operators is not None
+        and cat_imputation in exclude_operators
+        or include_operators is not None
+        and cat_imputation not in include_operators
     ):
         cat_pipe_info["cat_imputation"] = None
         cat_pipe_info["cat_null_value"] = None
@@ -330,8 +343,11 @@ def format_data_with_customized_num(
         cat_pipe_info["cat_null_value"] = cat_null_value
         cat_pipe_info["fill_val"] = fill_val
 
-    if (not exclude_operators is None and cat_encoding in exclude_operators) or (
-        not include_operators is None and cat_encoding not in include_operators
+    if (
+        exclude_operators is not None
+        and cat_encoding in exclude_operators
+        or include_operators is not None
+        and cat_encoding not in include_operators
     ):
         cat_pipe_info["cat_encoding"] = None
     else:
@@ -343,7 +359,7 @@ def format_data_with_customized_num(
 
     num_pipe_info: Dict[str, Any] = {}
     num_pipeline = []
-    if not customized_num_pipeline is None:
+    if customized_num_pipeline is not None:
         for item in customized_num_pipeline:
             (component_key,) = item
             num_pipeline.append(component_key)
@@ -351,10 +367,9 @@ def format_data_with_customized_num(
         for item in customized_num_pipeline:
             (component_key,) = item
             if (
-                not exclude_operators is None
+                exclude_operators is not None
                 and item[component_key]["operator"] in exclude_operators
-            ) or (
-                not include_operators is None
+                or include_operators is not None
                 and item[component_key]["operator"] not in include_operators
             ):
                 num_pipe_info[component_key] = None
@@ -439,11 +454,15 @@ def format_data_with_default(
     exclude_operators
         Components excluded for `clean_ml`, like "one_hot", "standardize", etc.
     """
-    cat_pipe_info: Dict[str, Any] = {}
-    cat_pipe_info["cat_pipeline"] = ["cat_imputation", "cat_encoding"]
+    cat_pipe_info: Dict[str, Any] = {
+        "cat_pipeline": ["cat_imputation", "cat_encoding"]
+    }
     # cat_pipe_info['cat_pipeline'] = ['cat_imputation']
-    if (not exclude_operators is None and cat_imputation in exclude_operators) or (
-        not include_operators is None and cat_imputation not in include_operators
+    if (
+        exclude_operators is not None
+        and cat_imputation in exclude_operators
+        or include_operators is not None
+        and cat_imputation not in include_operators
     ):
         cat_pipe_info["cat_imputation"] = None
         cat_pipe_info["cat_null_value"] = None
@@ -452,8 +471,11 @@ def format_data_with_default(
         cat_pipe_info["cat_imputation"] = cat_imputation
         cat_pipe_info["cat_null_value"] = cat_null_value
         cat_pipe_info["fill_val"] = fill_val
-    if (not exclude_operators is None and cat_encoding in exclude_operators) or (
-        not include_operators is None and cat_encoding not in include_operators
+    if (
+        exclude_operators is not None
+        and cat_encoding in exclude_operators
+        or include_operators is not None
+        and cat_encoding not in include_operators
     ):
         cat_pipe_info["cat_encoding"] = None
     else:
@@ -475,8 +497,11 @@ def format_data_with_default(
     else:
         num_pipe_info["num_pipeline"] = ["num_imputation", "num_scaling"]
     # num_pipe_info['num_pipeline'] = ['num_imputation', 'num_scaling']
-    if (not exclude_operators is None and num_imputation in exclude_operators) or (
-        not include_operators is None and num_imputation not in include_operators
+    if (
+        exclude_operators is not None
+        and num_imputation in exclude_operators
+        or include_operators is not None
+        and num_imputation not in include_operators
     ):
         num_pipe_info["num_imputation"] = None
         num_pipe_info["num_null_value"] = None
@@ -484,8 +509,11 @@ def format_data_with_default(
         num_pipe_info["num_imputation"] = num_imputation
         num_pipe_info["num_null_value"] = num_null_value
 
-    if (not exclude_operators is None and num_scaling in exclude_operators) or (
-        not include_operators is None and num_scaling not in include_operators
+    if (
+        exclude_operators is not None
+        and num_scaling in exclude_operators
+        or include_operators is not None
+        and num_scaling not in include_operators
     ):
         num_pipe_info["num_scaling"] = None
     else:
@@ -530,7 +558,7 @@ def format_data_with_customized_cat_and_num(
     """
     cat_pipe_info: Dict[str, Any] = {}
     cat_pipeline = []
-    if not customized_cat_pipeline is None:
+    if customized_cat_pipeline is not None:
         for item in customized_cat_pipeline:
             (component_key,) = item
             cat_pipeline.append(component_key)
@@ -538,10 +566,9 @@ def format_data_with_customized_cat_and_num(
         for item in customized_cat_pipeline:
             (component_key,) = item
             if (
-                not exclude_operators is None
+                exclude_operators is not None
                 and item[component_key]["operator"] in exclude_operators
-            ) or (
-                not include_operators is None
+                or include_operators is not None
                 and item[component_key]["operator"] not in include_operators
             ):
                 cat_pipe_info[component_key] = None
@@ -554,7 +581,7 @@ def format_data_with_customized_cat_and_num(
 
     num_pipe_info: Dict[str, Any] = {}
     num_pipeline = []
-    if not customized_num_pipeline is None:
+    if customized_num_pipeline is not None:
         for item in customized_num_pipeline:
             (component_key,) = item
             num_pipeline.append(component_key)
@@ -562,10 +589,9 @@ def format_data_with_customized_cat_and_num(
         for item in customized_num_pipeline:
             (component_key,) = item
             if (
-                not exclude_operators is None
+                exclude_operators is not None
                 and item[component_key]["operator"] in exclude_operators
-            ) or (
-                not include_operators is None
+                or include_operators is not None
                 and item[component_key]["operator"] not in include_operators
             ):
                 num_pipe_info[component_key] = None

@@ -123,10 +123,11 @@ def validate_pl_regon(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(regon.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(regon.is_valid)
-        else:
-            return df.applymap(regon.is_valid)
+        return (
+            df[column].apply(regon.is_valid)
+            if column
+            else df.applymap(regon.is_valid)
+        )
     return regon.is_valid(df)
 
 

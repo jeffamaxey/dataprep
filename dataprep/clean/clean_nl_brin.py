@@ -123,10 +123,11 @@ def validate_nl_brin(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(brin.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(brin.is_valid)
-        else:
-            return df.applymap(brin.is_valid)
+        return (
+            df[column].apply(brin.is_valid)
+            if column
+            else df.applymap(brin.is_valid)
+        )
     return brin.is_valid(df)
 
 

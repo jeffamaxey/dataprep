@@ -133,10 +133,11 @@ def validate_issn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(issn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(issn.is_valid)
-        else:
-            return df.applymap(issn.is_valid)
+        return (
+            df[column].apply(issn.is_valid)
+            if column
+            else df.applymap(issn.is_valid)
+        )
     return issn.is_valid(df)
 
 

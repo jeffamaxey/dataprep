@@ -123,10 +123,7 @@ def validate_fr_tva(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(tva.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(tva.is_valid)
-        else:
-            return df.applymap(tva.is_valid)
+        return df[column].apply(tva.is_valid) if column else df.applymap(tva.is_valid)
     return tva.is_valid(df)
 
 

@@ -117,16 +117,12 @@ class Connector:  # pylint: disable=too-many-instance-attributes
         allowed_params: Set[str] = set()
 
         for key, val in self._impdb.tables[table].config.request.params.items():
-            if isinstance(val, FieldDef):
-                if isinstance(val.from_key, list):
-                    allowed_params.update(val.from_key)
-                elif isinstance(val.from_key, str):
-                    allowed_params.add(val.from_key)
-                else:
-                    allowed_params.add(key)
+            if isinstance(val, FieldDef) and isinstance(val.from_key, list):
+                allowed_params.update(val.from_key)
+            elif isinstance(val, FieldDef) and isinstance(val.from_key, str):
+                allowed_params.add(val.from_key)
             else:
                 allowed_params.add(key)
-
         allowed_params.update(self._impdb.tables[table].config.request.url_path_params())
 
         for key in where:
@@ -169,7 +165,7 @@ class Connector:  # pylint: disable=too-many-instance-attributes
             throttler = self._throttler.session()
 
             if reqconf.pagination is None or _count is None:
-                df = await self._fetch(
+                return await self._fetch(
                     itable,
                     kwargs,
                     _client=client,
@@ -177,8 +173,6 @@ class Connector:  # pylint: disable=too-many-instance-attributes
                     _auth=_auth,
                     _q=_q,
                 )
-                return df
-
             pagdef = reqconf.pagination
 
             # pagination begins
@@ -391,14 +385,14 @@ class Connector:  # pylint: disable=too-many-instance-attributes
             return None
 
         async with _client.request(
-            method=method,
-            url=url,
-            headers=req_data["headers"],
-            params=req_data["params"],
-            json=req_data.get("json"),
-            data=req_data.get("data"),
-            cookies=req_data["cookies"],
-        ) as resp:
+                method=method,
+                url=url,
+                headers=req_data["headers"],
+                params=req_data["params"],
+                json=req_data.get("json"),
+                data=req_data.get("data"),
+                cookies=req_data["cookies"],
+            ) as resp:
             if resp.status != 200:
                 raise RequestError(status_code=resp.status, message=await resp.text())
             content = await resp.text()
@@ -408,10 +402,7 @@ class Connector:  # pylint: disable=too-many-instance-attributes
                 _allowed_page.set(_page)
                 df = None
 
-            if _raw:
-                return df, resp
-            else:
-                return df
+            return (df, resp) if _raw else df
 
 
 def validate_fields(fields: Dict[str, FieldDefUnion], data: Dict[str, Any]) -> None:
@@ -424,9 +415,7 @@ def validate_fields(fields: Dict[str, FieldDefUnion], data: Dict[str, Any]) -> N
             required = def_
             if required and to_key not in data:
                 raise KeyError(f"'{to_key}' is required but not provided")
-        elif isinstance(def_, str):
-            pass
-        else:
+        elif not isinstance(def_, str):
             to_key = def_.to_key or to_key
             required = def_.required
             if required and to_key not in data:
@@ -475,5 +464,4 @@ def populate_field(  # pylint: disable=too-many-branches
                         RuntimeWarning,
                     )
                 ret[to_key] = str_value
-                continue
     return ret

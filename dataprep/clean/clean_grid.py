@@ -130,10 +130,11 @@ def validate_grid(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(grid.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(grid.is_valid)
-        else:
-            return df.applymap(grid.is_valid)
+        return (
+            df[column].apply(grid.is_valid)
+            if column
+            else df.applymap(grid.is_valid)
+        )
     return grid.is_valid(df)
 
 

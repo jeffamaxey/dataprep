@@ -15,7 +15,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_urls() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_url": [
                 "random text which is not a url",
@@ -34,7 +34,6 @@ def df_urls() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_urls: pd.DataFrame) -> None:

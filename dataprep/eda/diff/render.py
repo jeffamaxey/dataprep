@@ -53,11 +53,8 @@ def _format_values(key: str, value: List[Any]) -> List[str]:
             # eliminate trailing zeros
             pre_value = float(f"{value[i]:.4f}")
             val = int(pre_value) if (pre_value * 10) % 10 == 0 else pre_value  # type: ignore
-        elif 0.001 <= abs(value[i]) < 1:  # type: ignore
-            val = f"{value[i]:.4g}"  # type: ignore
         else:
-            val = str(value[i])  # type: ignore
-
+            val = f"{value[i]:.4g}"  # type: ignore
         if "%" in key:
             # for percentage, only use digits before notation sign for extreme small number
             val = f"{float(val):.1%}"  # type: ignore
@@ -94,9 +91,8 @@ def bar_viz(
         ("Source", "@orig"),
     ]
 
-    if show_yticks:
-        if len(df[baseline]) > 10:
-            plot_width = 28 * len(df[baseline])
+    if show_yticks and len(df[baseline]) > 10:
+        plot_width = 28 * len(df[baseline])
     fig = Figure(
         plot_width=plot_width,
         plot_height=plot_height,
@@ -215,12 +211,11 @@ def hist_viz(
         x_axis_label += col
         if yscale == "linear":
             _format_axis(fig, 0, df["freq"].max(), "y")
-    if orig:
-        if orig != df_labels:
-            if x_axis_label:
-                x_axis_label += f", this vairable is only in {','.join(orig)}"
-            else:
-                x_axis_label += f"This vairable is only in {','.join(orig)}"
+    if orig and orig != df_labels:
+        if x_axis_label:
+            x_axis_label += f", this vairable is only in {','.join(orig)}"
+        else:
+            x_axis_label += f"This vairable is only in {','.join(orig)}"
     fig.xaxis.axis_label = x_axis_label
     fig.xaxis.axis_label_standoff = 0
 
@@ -351,7 +346,7 @@ def dt_line_viz(
 
     tweak_figure(fig, "line", show_yticks)
     if show_yticks and yscale == "linear":
-        _format_axis(fig, 0, max([d["freq"].max() for d in df]), "y")
+        _format_axis(fig, 0, max(d["freq"].max() for d in df), "y")
 
     if orig != df_labels:
         fig.xaxis.axis_label = f"This variable is only in {','.join(orig)}"
@@ -466,7 +461,7 @@ def render_correlation_single_heatmaps(
     """
     # pylint:disable = too-many-locals
     corr: Dict[str, List[Any]] = {}
-    group_all_x = [col + "_" + str(i + 1) for i in range(len(df_list))]
+    group_all_x = [f"{col}_{str(i + 1)}" for i in range(len(df_list))]
     group_all_y = df_list[0]["Pearson"]["y"].unique()
     for meth in ["Pearson", "Spearman", "KendallTau"]:
         corr[meth] = []
@@ -662,10 +657,7 @@ def render_comparison_grid(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
             titles.append(fig.title.text)
             figs.append(fig)
 
-    if cfg.stats.enable:
-        toggle_content = "Stats"
-    else:
-        toggle_content = None  # type: ignore
+    toggle_content = "Stats" if cfg.stats.enable else None
     return {
         "layout": figs,
         "meta": titles,
@@ -700,13 +692,17 @@ def render_comparison_continous(itmdt: Intermediate, cfg: Config) -> Dict[str, A
         )
         tabs.append(Panel(child=row(fig), title="Histogram"))
         # htgs["Histogram"] = cfg.hist.how_to_guide(plot_height, plot_width)
-    if cfg.kde.enable:
-        if data["kde"] is not None and (
-            not math.isclose(itmdt["stats"]["min"][0], itmdt["stats"]["max"][0])
-        ):
-            dens, kde = data["dens"], data["kde"]
-            tabs.append(kde_viz_panel(dens, kde, col, plot_width, plot_height, cfg))
-            # htgs["KDE Plot"] = cfg.kde.how_to_guide(plot_height, plot_width)
+    if (
+        cfg.kde.enable
+        and data["kde"] is not None
+        and (
+            not math.isclose(
+                itmdt["stats"]["min"][0], itmdt["stats"]["max"][0]
+            )
+        )
+    ):
+        dens, kde = data["dens"], data["kde"]
+        tabs.append(kde_viz_panel(dens, kde, col, plot_width, plot_height, cfg))
     if cfg.box.enable:
         df_list = []
         group_all = []
@@ -727,8 +723,8 @@ def render_comparison_continous(itmdt: Intermediate, cfg: Config) -> Dict[str, A
     for panel in tabs:
         panel.child.children[0].frame_width = int(plot_width * 0.9)
     if cfg.correlations.enable:
-        tabs = tabs + (
-            render_correlation_single_heatmaps(data["corr"], col, plot_width, plot_height, cfg)
+        tabs += render_correlation_single_heatmaps(
+            data["corr"], col, plot_width, plot_height, cfg
         )
 
     # pylint:disable=line-too-long

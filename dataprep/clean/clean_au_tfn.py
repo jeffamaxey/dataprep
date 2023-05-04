@@ -122,10 +122,7 @@ def validate_au_tfn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(tfn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(tfn.is_valid)
-        else:
-            return df.applymap(tfn.is_valid)
+        return df[column].apply(tfn.is_valid) if column else df.applymap(tfn.is_valid)
     return tfn.is_valid(df)
 
 

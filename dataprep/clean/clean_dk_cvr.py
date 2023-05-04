@@ -123,10 +123,7 @@ def validate_dk_cvr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cvr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cvr.is_valid)
-        else:
-            return df.applymap(cvr.is_valid)
+        return df[column].apply(cvr.is_valid) if column else df.applymap(cvr.is_valid)
     return cvr.is_valid(df)
 
 

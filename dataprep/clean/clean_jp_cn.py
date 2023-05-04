@@ -122,10 +122,7 @@ def validate_jp_cn(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cn.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cn.is_valid)
-        else:
-            return df.applymap(cn.is_valid)
+        return df[column].apply(cn.is_valid) if column else df.applymap(cn.is_valid)
     return cn.is_valid(df)
 
 

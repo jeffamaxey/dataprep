@@ -146,9 +146,11 @@ class Clusterer:
                     cluster_map[center].add(val)
 
         # remove duplicate clusters and clusters of length 1
-        unique_clusters = set(
-            frozenset(cluster) for cluster in cluster_map.values() if len(cluster) > 1
-        )
+        unique_clusters = {
+            frozenset(cluster)
+            for cluster in cluster_map.values()
+            if len(cluster) > 1
+        }
         # convert to list of lists
         clusters = [list(cluster) for cluster in unique_clusters]
         # sort by the size of each cluster, so that larger clusters appear first
@@ -265,8 +267,8 @@ class Clusterer:
         Merge the clusters in the DataFrame.
         """
         for idx, cluster in enumerate(cluster_page):
-            cluster_repr = new_values[idx]
             if do_merge[idx]:
+                cluster_repr = new_values[idx]
                 self._df[self._col] = self._df[self._col].replace(
                     [cluster_val for cluster_val, _ in cluster], cluster_repr
                 )

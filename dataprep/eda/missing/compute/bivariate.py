@@ -112,8 +112,10 @@ def _compute_missing_bivariate(  # pylint: disable=too-many-locals,too-many-stat
             boxdf["lower"] = np.maximum(boxdf["q3"] - 1.5 * iqr, boxdf["min"])
             boxdf["label"] = LABELS
 
-        itmdt = Intermediate(
-            dist=distdf if cfg.pdf.enable or cfg.cdf.enable else pd.DataFrame({}),
+        return Intermediate(
+            dist=distdf
+            if cfg.pdf.enable or cfg.cdf.enable
+            else pd.DataFrame({}),
             hist=histdf if cfg.hist.enable else pd.DataFrame({}),
             box=boxdf if cfg.box.enable else pd.DataFrame({}),
             meta=meta["y"],
@@ -121,8 +123,6 @@ def _compute_missing_bivariate(  # pylint: disable=too-many-locals,too-many-stat
             y=y,
             visual_type="missing_impact_1v1",
         )
-        return itmdt
-
     else:
         counts, xs = zip(*hists)
 
@@ -146,14 +146,13 @@ def _compute_missing_bivariate(  # pylint: disable=too-many-locals,too-many-stat
 
         meta["y", "shown"] = shown
         meta["y", "total"] = len(counts[0])
-        itmdt = Intermediate(
+        return Intermediate(
             hist=df_ret,
             x=x,
             y=y,
             meta=meta["y"],
             visual_type="missing_impact_1v1",
         )
-        return itmdt
 
 
 # Not using decorator here because jupyter autoreload does not support it.

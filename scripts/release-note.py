@@ -152,9 +152,7 @@ def commits_since_previous(
         if commit.binsha in commits:
             continue
 
-        matches = VERSION_REG.findall(commit.message)
-
-        if matches:
+        if matches := VERSION_REG.findall(commit.message):
             previous = commit
             continue
 

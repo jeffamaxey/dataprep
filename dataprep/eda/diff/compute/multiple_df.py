@@ -38,29 +38,21 @@ class Dfs(UserList):
         super().__init__(dfs)
 
     def __getattr__(self, attr: str) -> UserList:
-        output = []
-        for df in self.data:
-            output.append(getattr(df, attr))
+        output = [getattr(df, attr) for df in self.data]
         return Dfs(output)
 
     def apply(self, method: str, *params: Optional[Any], **kwargs: Optional[Any]) -> UserList:
         """
         Apply the same method for all elements in the list.
         """
-        output = []
-        for df in self.data:
-            output.append(getattr(df, method)(*params, **kwargs))
-
+        output = [getattr(df, method)(*params, **kwargs) for df in self.data]
         return Dfs(output)
 
     def getidx(self, ind: Union[str, int]) -> List[Any]:
         """
         Get the specified index for all elements in the list.
         """
-        output = []
-        for data in self.data:
-            output.append(data[ind])
-        return output
+        return [data[ind] for data in self.data]
 
     def self_map(self, func: Callable[[dd.Series], Any], **kwargs: Any) -> List[Any]:
         """
@@ -79,37 +71,27 @@ class Srs(UserList):
         super().__init__()
         if agg:
             self.data = srs
+        elif len(srs.shape) > 1:
+            self.data: List[dd.Series] = [srs.iloc[:, loc] for loc in range(srs.shape[1])]
         else:
-            if len(srs.shape) > 1:
-                self.data: List[dd.Series] = [srs.iloc[:, loc] for loc in range(srs.shape[1])]
-            else:
-                self.data: List[dd.Series] = [srs]
+            self.data: List[dd.Series] = [srs]
 
     def __getattr__(self, attr: str) -> UserList:
-        output = []
-        for srs in self.data:
-            output.append(getattr(srs, attr))
+        output = [getattr(srs, attr) for srs in self.data]
         return Srs(output, agg=True)
 
     def apply(self, method: str, *params: Optional[Any], **kwargs: Optional[Any]) -> UserList:
         """
         Apply the same method for all elements in the list.
         """
-        output = []
-        for srs in self.data:
-            output.append(getattr(srs, method)(*params, **kwargs))
-
+        output = [getattr(srs, method)(*params, **kwargs) for srs in self.data]
         return Srs(output, agg=True)
 
     def getidx(self, ind: Union[str, int]) -> List[Any]:
         """
         Get the specified index for all elements in the list.
         """
-        output = []
-        for data in self.data:
-            output.append(data[ind])
-
-        return output
+        return [data[ind] for data in self.data]
 
     def getmask(
         self, mask: Union[List[dd.Series], UserList], inverse: bool = False
@@ -180,21 +162,13 @@ def compare_multiple_df(
     for col in uniq_cols:
         srs = Srs(aligned_dfs[col])
         col_dtype = srs.self_map(detect_dtype, known_dtype=dtype)
-        if len(col_dtype) > 1:
-            col_dtype = col_dtype[baseline]
-        else:
-            col_dtype = col_dtype[0]
-
+        col_dtype = col_dtype[baseline] if len(col_dtype) > 1 else col_dtype[0]
         orig = [src for src, seq in labeled_cols.items() if col in seq]
 
         if is_dtype(col_dtype, Continuous()) and cfg.hist.enable:
             data.append((col, Continuous(), _cont_calcs(srs.apply("dropna"), cfg), orig))
         elif is_dtype(col_dtype, Nominal()) and cfg.bar.enable:
-            # When concating dfs, NA may be introduced (e.g., dfs with different rows),
-            # making the int column becomes float. Hence we check whether the col should be
-            # int after drop NA. If so, we will round column before transform it to str.
-            is_int = _is_all_int(df_list, col)
-            if is_int:
+            if is_int := _is_all_int(df_list, col):
                 norm_srs = srs.apply("dropna").apply(
                     "apply", lambda x: str(round(x)), meta=(col, "object")
                 )
@@ -255,8 +229,8 @@ def calc_stats(dfs: Dfs, cfg: Config, dtype: Optional[DTypeDef]) -> Dict[str, Li
     """
     stats: Dict[str, List[Any]] = {"nrows": dfs.shape.getidx(0)}
     dtype_cnts = []
-    num_cols = []
     if cfg.stats.enable:
+        num_cols = []
         for df in dfs:
             temp = get_dtype_cnts_and_num_cols(df, dtype=dtype)
             dtype_cnts.append(temp[0])
@@ -286,8 +260,10 @@ def _cont_calcs(srs: Srs, cfg: Config) -> Dict[str, List[Any]]:
     ).data
     min_max_comp = []
     if cfg.diff.density:
-        for min_max_value in dask.compute(min_max)[0]:
-            min_max_comp.append(math.isclose(min_max_value.min(), min_max_value.max()))
+        min_max_comp.extend(
+            math.isclose(min_max_value.min(), min_max_value.max())
+            for min_max_value in dask.compute(min_max)[0]
+        )
     min_max = dd.concat(min_max).repartition(npartitions=1)
 
     # histogram
@@ -327,13 +303,11 @@ def _nom_calcs(srs: Srs, cfg: Config) -> Dict[str, List[Any]]:
 
     # dictionary of data for the bar chart and related insights
     data: Dict[str, List[Any]] = {}
-    baseline: int = cfg.diff.baseline
-
-    # value counts for barchart and uniformity insight
-
     if cfg.bar.enable:
         if len(srs) > 1:
             grps = srs.apply("value_counts", "sort=False").data
+            baseline: int = cfg.diff.baseline
+
             # select the largest or smallest groups
             grps[baseline] = (
                 grps[baseline].nlargest(cfg.bar.bars)
@@ -342,7 +316,7 @@ def _nom_calcs(srs: Srs, cfg: Config) -> Dict[str, List[Any]]:
             )
             data["bar"] = grps
             data["nuniq"] = grps[baseline].shape[0]
-        else:  # singular column
+        else:
             grps = srs.apply("value_counts", "sort=False").data[0]
             ngrp = (
                 grps.nlargest(cfg.bar.bars)

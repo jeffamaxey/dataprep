@@ -123,10 +123,7 @@ def validate_es_nie(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nie.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nie.is_valid)
-        else:
-            return df.applymap(nie.is_valid)
+        return df[column].apply(nie.is_valid) if column else df.applymap(nie.is_valid)
     return nie.is_valid(df)
 
 

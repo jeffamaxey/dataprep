@@ -123,10 +123,7 @@ def validate_eu_eic(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(eic.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(eic.is_valid)
-        else:
-            return df.applymap(eic.is_valid)
+        return df[column].apply(eic.is_valid) if column else df.applymap(eic.is_valid)
     return eic.is_valid(df)
 
 

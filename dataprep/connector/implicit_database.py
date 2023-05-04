@@ -54,42 +54,41 @@ class ImplicitTable:  # pylint: disable=too-many-instance-attributes
         respdef = self.config.response
         table_expr = jparse(respdef.table_path)  # pylint: disable=no-member
 
-        if respdef.orient == "records":  # pylint: disable=no-member
-            data_rows = [match.value for match in table_expr.find(data)]
-
-            for (
-                column_name,
-                column_def,
-            ) in respdef.schema_.items():
-                column_target = column_def.target
-                column_type = column_def.type
-
-                target_matcher = jparse(column_target)
-
-                col: List[Any] = []
-                for data_row in data_rows:
-                    maybe_cell_value = [m.value for m in target_matcher.find(data_row)]
-
-                    if not maybe_cell_value:  # If no match
-                        col.append(None)
-                    elif len(maybe_cell_value) == 1 and column_type != "object":
-                        (cell_value,) = maybe_cell_value
-                        if cell_value is not None:
-                            # Even we have value matched,
-                            # the value might be None so we don't do type conversion.
-                            cell_value = _TYPE_MAPPING[column_type](cell_value)
-                        col.append(cell_value)
-                    else:
-                        assert (
-                            column_type == "object"
-                        ), f"{column_name}: {maybe_cell_value} is not {column_type}"
-                        col.append(maybe_cell_value)
-
-                table_data[column_name] = col
-        else:
+        if respdef.orient != "records":
             # TODO: split orient
             raise NotImplementedError
 
+        data_rows = [match.value for match in table_expr.find(data)]
+
+        for (
+            column_name,
+            column_def,
+        ) in respdef.schema_.items():
+            column_target = column_def.target
+            column_type = column_def.type
+
+            target_matcher = jparse(column_target)
+
+            col: List[Any] = []
+            for data_row in data_rows:
+                maybe_cell_value = [m.value for m in target_matcher.find(data_row)]
+
+                if not maybe_cell_value:  # If no match
+                    col.append(None)
+                elif len(maybe_cell_value) == 1 and column_type != "object":
+                    (cell_value,) = maybe_cell_value
+                    if cell_value is not None:
+                        # Even we have value matched,
+                        # the value might be None so we don't do type conversion.
+                        cell_value = _TYPE_MAPPING[column_type](cell_value)
+                    col.append(cell_value)
+                else:
+                    assert (
+                        column_type == "object"
+                    ), f"{column_name}: {maybe_cell_value} is not {column_type}"
+                    col.append(maybe_cell_value)
+
+            table_data[column_name] = col
         return table_data
 
 

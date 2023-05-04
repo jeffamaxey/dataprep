@@ -124,10 +124,11 @@ def validate_ee_registrikood(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(registrikood.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(registrikood.is_valid)
-        else:
-            return df.applymap(registrikood.is_valid)
+        return (
+            df[column].apply(registrikood.is_valid)
+            if column
+            else df.applymap(registrikood.is_valid)
+        )
     return registrikood.is_valid(df)
 
 

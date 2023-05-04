@@ -122,10 +122,7 @@ def validate_ch_esr(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(esr.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(esr.is_valid)
-        else:
-            return df.applymap(esr.is_valid)
+        return df[column].apply(esr.is_valid) if column else df.applymap(esr.is_valid)
     return esr.is_valid(df)
 
 

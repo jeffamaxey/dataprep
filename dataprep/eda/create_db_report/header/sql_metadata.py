@@ -22,8 +22,7 @@ def plot_mysql_db(sql_engine: Engine):
         sql_engine,
     )
     view_sql = pd.read_sql(
-        """SELECT table_schema AS schemaname, concat_ws('.', table_schema, table_name) AS view_name, view_definition AS definition FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA != 'sys' AND TABLE_SCHEMA = '%s' ORDER BY 1,2;"""
-        % (db_name),
+        f"""SELECT table_schema AS schemaname, concat_ws('.', table_schema, table_name) AS view_name, view_definition AS definition FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA != 'sys' AND TABLE_SCHEMA = '{db_name}' ORDER BY 1,2;""",
         sql_engine,
     )
     pk_fk = pd.read_sql(
@@ -42,21 +41,25 @@ def plot_mysql_db(sql_engine: Engine):
     table_list = list(table_sql["table_name"])
     view_list = list(view_sql["view_name"])
 
-    overview_dict = {}
-    # Show the stats for schemas, tables and PK/FK
-    overview_dict["num_of_schemas"] = len(set(schema_list))
-    overview_dict["schema_names"] = list(set(schema_list))
-    overview_dict["num_of_tables"] = len(table_list)
-    overview_dict["table_names"] = table_list
-    overview_dict["num_of_views"] = len(view_list)
-    overview_dict["view_names"] = view_list
-    overview_dict["tables_no_index"] = list(
-        table_sql[
-            ~table_sql["table_name"].isin(
-                set(pk_fk[pk_fk["constraint_type"] == "PRIMARY KEY"]["table_name"])
-            )
-        ]["table_name"]
-    )
+    overview_dict = {
+        "num_of_schemas": len(set(schema_list)),
+        "schema_names": list(set(schema_list)),
+        "num_of_tables": len(table_list),
+        "table_names": table_list,
+        "num_of_views": len(view_list),
+        "view_names": view_list,
+        "tables_no_index": list(
+            table_sql[
+                ~table_sql["table_name"].isin(
+                    set(
+                        pk_fk[pk_fk["constraint_type"] == "PRIMARY KEY"][
+                            "table_name"
+                        ]
+                    )
+                )
+            ]["table_name"]
+        ),
+    }
     overview_dict["num_of_pk"] = len(
         set(pk_fk[pk_fk["constraint_type"] == "PRIMARY KEY"]["table_name"])
     )
@@ -82,15 +85,18 @@ def plot_mysql_db(sql_engine: Engine):
     table_dict = {}
     for i in table_list:
         indices = {}
-        index = pd.read_sql("SHOW INDEX FROM " + str(i) + " FROM " + db_name + ";", sql_engine)
+        index = pd.read_sql(
+            f"SHOW INDEX FROM {str(i)} FROM " + db_name + ";", sql_engine
+        )
         for (idx, row) in index.iterrows():
             if row.loc["Key_name"] in indices:
                 indices[row.loc["Key_name"]]["Column_name"] += "," + row.loc["Column_name"]
                 # indices[row.loc['Key_name']]['Index_type']+="/"+row.loc['Index_type']
             else:
-                new_index = {}
-                new_index["Column_name"] = row.loc["Column_name"]
-                new_index["Index_type"] = row.loc["Index_type"]
+                new_index = {
+                    "Column_name": row.loc["Column_name"],
+                    "Index_type": row.loc["Index_type"],
+                }
                 indices[row.loc["Key_name"]] = new_index
         temp = OrderedDict()
         temp_cols = (
@@ -112,12 +118,15 @@ def plot_mysql_db(sql_engine: Engine):
                     & (pk_fk["constraint_type"] == "FOREIGN KEY")
                 ]["ref_table"]
             )
-        temp["num_of_parents"] = int(
-            len(pk_fk[(pk_fk["table_name"] == i) & (pk_fk["constraint_type"] == "FOREIGN KEY")])
+        temp["num_of_parents"] = len(
+            pk_fk[
+                (pk_fk["table_name"] == i)
+                & (pk_fk["constraint_type"] == "FOREIGN KEY")
+            ]
         )
-        temp["num_of_children"] = int(len(pk_fk[(pk_fk["ref_table"] == i)]))
+        temp["num_of_children"] = len(pk_fk[(pk_fk["ref_table"] == i)])
         temp["num_of_rows"] = int(table_sql[table_sql["table_name"] == i]["row_count"].values[0])
-        temp["num_of_cols"] = int(len(all_cols[all_cols["table_name"] == i]))
+        temp["num_of_cols"] = len(all_cols[all_cols["table_name"] == i])
         temp["constraints"] = {}
         temp_pk_fk = (
             pk_fk[pk_fk["table_name"] == i]
@@ -221,24 +230,29 @@ WHERE v.schemaname != 'pg_catalog' AND v.schemaname != 'information_schema' AND 
     schema_str = ",".join(set(schema_list))
     table_list = list(table_sql["table_name"])
     view_list = list(view_sql["view_name"])
-    overview_dict = {}
-    # Show the stats for schemas, tables and PK/FK
-    overview_dict["num_of_schemas"] = len(set(schema_list))
-    overview_dict["schema_names"] = list(set(schema_list))
-    overview_dict["table_schema"] = dict(zip(table_sql["table_name"], table_sql["schemaname"]))
-    overview_dict["num_of_tables"] = len(table_list)
-    overview_dict["table_names"] = table_list
-    overview_dict["num_of_views"] = len(view_list)
-    overview_dict["view_names"] = view_list
-    overview_dict["tables_no_index"] = list(
-        table_sql[table_sql["hasindexes"] == False]["table_name"]
-    )
-    overview_dict["num_of_pk"] = len(pk_fk[pk_fk["constraint_type"] == "primary key"])
-    overview_dict["num_of_fk"] = len(pk_fk[pk_fk["constraint_type"] == "foreign key"])
-    overview_dict["num_of_uk"] = len(pk_fk[pk_fk["constraint_type"] == "unique key"])
-    overview_dict["view_schema"] = dict(zip(view_sql["view_name"], view_sql["schemaname"]))
-    overview_dict["product_version"] = re.findall("[\d\.]+\d+", version_sql.values[0][0])[0]
-
+    overview_dict = {
+        "num_of_schemas": len(set(schema_list)),
+        "schema_names": list(set(schema_list)),
+        "table_schema": dict(
+            zip(table_sql["table_name"], table_sql["schemaname"])
+        ),
+        "num_of_tables": len(table_list),
+        "table_names": table_list,
+        "num_of_views": len(view_list),
+        "view_names": view_list,
+        "tables_no_index": list(
+            table_sql[table_sql["hasindexes"] == False]["table_name"]
+        ),
+        "num_of_pk": len(pk_fk[pk_fk["constraint_type"] == "primary key"]),
+        "num_of_fk": len(pk_fk[pk_fk["constraint_type"] == "foreign key"]),
+        "num_of_uk": len(pk_fk[pk_fk["constraint_type"] == "unique key"]),
+        "view_schema": dict(
+            zip(view_sql["view_name"], view_sql["schemaname"])
+        ),
+        "product_version": re.findall("[\d\.]+\d+", version_sql.values[0][0])[
+            0
+        ],
+    }
     # Stats for column level stats
     all_cols = pd.read_sql(
         """select concat_ws('.', n.nspname, attrelid::regclass) AS table_name, f.attname AS col_name,
@@ -309,12 +323,15 @@ WHERE v.schemaname != 'pg_catalog' AND v.schemaname != 'information_schema' AND 
                     & (pk_fk["constraint_type"] == "foreign key")
                 ]["ref_table"]
             )
-        temp["num_of_parents"] = int(
-            len(pk_fk[(pk_fk["table_name"] == i) & (pk_fk["constraint_type"] == "foreign key")])
+        temp["num_of_parents"] = len(
+            pk_fk[
+                (pk_fk["table_name"] == i)
+                & (pk_fk["constraint_type"] == "foreign key")
+            ]
         )
-        temp["num_of_children"] = int(len(pk_fk[(pk_fk["ref_table"] == i)]))
+        temp["num_of_children"] = len(pk_fk[(pk_fk["ref_table"] == i)])
         temp["num_of_rows"] = int(table_sql[table_sql["table_name"] == i]["row_count"].values[0])
-        temp["num_of_cols"] = int(len(all_cols[all_cols["table_name"] == i]))
+        temp["num_of_cols"] = len(all_cols[all_cols["table_name"] == i])
         temp["constraints"] = {}
         temp_pk_fk = (
             pk_fk[pk_fk["table_name"] == i].drop(columns=["table_name"]).to_dict(orient="records")

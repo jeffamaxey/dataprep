@@ -335,15 +335,13 @@ def _check_fuzzy_dist(country: str, fuzzy_dist: int) -> Any:
         # (insertions, deletions and substitutions) must be <= fuzzy_dist,
         # re.BESTMATCH looks for a match with minimum number of errors
         fuzzy_regex = f"({country_regex}){{e<={fuzzy_dist}}}"
-        match = re.search(fuzzy_regex, country, flags=re.BESTMATCH | re.IGNORECASE)
-        if match:
+        if match := re.search(
+            fuzzy_regex, country, flags=re.BESTMATCH | re.IGNORECASE
+        ):
             # add total number of errors and the index to results
             results.append((sum(match.fuzzy_counts), i))
 
-    if not results:
-        return None, "unknown"
-
-    return min(results)[1], "success"
+    return (min(results)[1], "success") if results else (None, "unknown")
 
 
 def _get_format_from_name(name: str) -> str:

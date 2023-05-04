@@ -73,7 +73,7 @@ def render_dist(
     """
     Render a distribution, CDF or PDF
     """
-    assert typ in ["pdf", "cdf"]
+    assert typ in {"pdf", "cdf"}
     tooltips = [
         (x, "@x"),
         (typ.upper(), f"@{{{typ}}}"),
@@ -344,10 +344,14 @@ def render_missing_impact(itmdt: Intermediate, cfg: Config) -> Dict[str, Any]:
 
     return {
         "insights": itmdt["insights"],
-        "tabledata": {"Missing Statistics": stat_dict} if cfg.stats.enable else {},
+        "tabledata": {"Missing Statistics": stat_dict}
+        if cfg.stats.enable
+        else {},
         "layout": [panel.child.children[0] for panel in tabs],
         "meta": [panel.title for panel in tabs],
-        "container_width": max([panel.child.children[0].plot_width for panel in tabs]),
+        "container_width": max(
+            panel.child.children[0].plot_width for panel in tabs
+        ),
         "how_to_guide": htgs,
     }
 
@@ -688,7 +692,7 @@ def render_missing_impact_1v1(itmdt: Intermediate, cfg: Config) -> Dict[str, Any
         return {
             "layout": [panel.child for panel in panels],
             "meta": [panel.title for panel in panels],
-            "container_width": max([panel.child.plot_width for panel in panels]),
+            "container_width": max(panel.child.plot_width for panel in panels),
             "how_to_guide": htgs,
         }
     elif isinstance(meta["dtype"], (Nominal, SmallCardNum, GeoGraphy, DateTime)):

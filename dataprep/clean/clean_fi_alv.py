@@ -123,10 +123,7 @@ def validate_fi_alv(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(alv.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(alv.is_valid)
-        else:
-            return df.applymap(alv.is_valid)
+        return df[column].apply(alv.is_valid) if column else df.applymap(alv.is_valid)
     return alv.is_valid(df)
 
 

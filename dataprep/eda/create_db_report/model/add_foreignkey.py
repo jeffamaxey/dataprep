@@ -48,10 +48,10 @@ class ForeignKeyConstraint:
         return self.getDeleteRule() == self.importedKeyCascade
 
     def isRestrictDelete(self):
-        return (
-            self.getDeleteRule() == self.importedKeyNoAction
-            or self.getDeleteRule() == self.importedKeyRestrict
-        )
+        return self.getDeleteRule() in [
+            self.importedKeyNoAction,
+            self.importedKeyRestrict,
+        ]
 
     def isNullOnDelete(self):
         return self.getDeleteRule() == self.importedKeySetNull
@@ -59,10 +59,10 @@ class ForeignKeyConstraint:
     def getDeleteRuleName(self):
         if self.getDeleteRule() == self.importedKeyCascade:
             return "Cascade on delete"
-        elif (
-            self.getDeleteRule() == self.importedKeyRestrict
-            or self.getDeleteRule() == self.importedKeyNoAction
-        ):
+        elif self.getDeleteRule() in [
+            self.importedKeyRestrict,
+            self.importedKeyNoAction,
+        ]:
             return "Restrict delete"
         elif self.getDeleteRule() == self.importedKeySetNull:
             return "Null on delete"
@@ -72,10 +72,10 @@ class ForeignKeyConstraint:
     def getDeleteRuleDescription(self):
         if self.getDeleteRule() == self.importedKeyCascade:
             return "Cascade on delete:\nDeletion of parent deletes child"
-        elif (
-            self.getDeleteRule() == self.importedKeyRestrict
-            or self.getDeleteRule() == self.importedKeyNoAction
-        ):
+        elif self.getDeleteRule() in [
+            self.importedKeyRestrict,
+            self.importedKeyNoAction,
+        ]:
             return "Restrict delete:\nParent cannot be deleted if children exist"
         elif self.getDeleteRule() == self.importedKeySetNull:
             return "Null on delete:\nForeign key to parent set to NULL when parent deleted"
@@ -85,10 +85,10 @@ class ForeignKeyConstraint:
     def getDeleteRuleAlias(self):
         if self.getDeleteRule() == self.importedKeyCascade:
             return "C"
-        elif (
-            self.getDeleteRule() == self.importedKeyRestrict
-            or self.getDeleteRule() == self.importedKeyNoAction
-        ):
+        elif self.getDeleteRule() in [
+            self.importedKeyRestrict,
+            self.importedKeyNoAction,
+        ]:
             return "R"
         elif self.getDeleteRule() == self.importedKeySetNull:
             return "N"

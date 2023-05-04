@@ -20,14 +20,10 @@ from ...utils import cut_long_name
 def _compute_missing_nullivariate(df: EDAFrame, cfg: Config) -> Generator[Any, Any, Intermediate]:
     """Calculate the data for visualizing the plot_missing(df).
     This contains the missing spectrum, missing bar chart and missing heatmap."""
-    # pylint: disable=too-many-locals
-
-    most_show = 5  # the most number of column/row to show in "insight"
-
     nullity = df.nulls
     null_cnts = nullity.sum(axis=0)
-    nrows = df.shape[0]
     ncols = df.shape[1]
+    nrows = df.shape[0]
     null_perc = null_cnts / nrows
     miss_perc = nullity.sum() / (nrows * ncols)
     avg_row = nullity.sum() / nrows
@@ -72,7 +68,11 @@ def _compute_missing_nullivariate(df: EDAFrame, cfg: Config) -> Generator[Any, A
         if nrows != 1:
             # heatmap is nan when dataframe has only one column so that generate error.
             # To solve the problem, we create a 2d array here
-            heatmap = np.empty([ncols, ncols]) if not isinstance(heatmap, np.ndarray) else heatmap
+            heatmap = (
+                heatmap
+                if isinstance(heatmap, np.ndarray)
+                else np.empty([ncols, ncols])
+            )
             heatmap = pd.DataFrame(
                 data=heatmap[:, sel][sel, :], columns=df.columns[sel], index=df.columns[sel]
             )
@@ -82,7 +82,7 @@ def _compute_missing_nullivariate(df: EDAFrame, cfg: Config) -> Generator[Any, A
     if cfg.stats.enable:
         missing_stat = {
             "Missing Cells": cnt,
-            "Missing Cells (%)": str(round(miss_perc * 100, 1)) + "%",
+            "Missing Cells (%)": f"{str(round(miss_perc * 100, 1))}%",
             "Missing Columns": col_cnt,
             "Missing Rows": row_cnt,
             "Avg Missing Cells per Column": round(avg_col, 2),
@@ -90,24 +90,27 @@ def _compute_missing_nullivariate(df: EDAFrame, cfg: Config) -> Generator[Any, A
         }
 
     if cfg.insight.enable:
+        # pylint: disable=too-many-locals
+
+        most_show = 5  # the most number of column/row to show in "insight"
+
         suffix_col = "" if most_col[0] <= most_show else ", ..."
         suffix_row = "" if most_row[0] <= most_show else ", ..."
 
-        top_miss_col = (
-            str(most_col[0])
-            + " col(s): "
-            + str(
-                "("
-                + ", ".join(cut_long_name(df.columns[e]) for e in most_col[2][:most_show])
-                + suffix_col
-                + ")"
+        top_miss_col = f"{str(most_col[0])} col(s): " + str(
+            "("
+            + ", ".join(
+                cut_long_name(df.columns[e]) for e in most_col[2][:most_show]
             )
+            + suffix_col
+            + ")"
         )
 
-        top_miss_row = (
-            str(most_row[0])
-            + " row(s): "
-            + str("(" + ", ".join(str(e) for e in most_row[2][:most_show]) + suffix_row + ")")
+        top_miss_row = f"{str(most_row[0])} row(s): " + str(
+            "("
+            + ", ".join(str(e) for e in most_row[2][:most_show])
+            + suffix_row
+            + ")"
         )
 
         insights = (

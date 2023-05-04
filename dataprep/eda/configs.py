@@ -1221,26 +1221,22 @@ class Config(BaseModel):
             setattr(plot, param, val)
             if hasattr(plot, "_user_input_params"):
                 plot._user_input_params[param] = val
-        else:
-            if raise_error_if_not_exists:
-                raise AttributeError(f"{plot_name} plot does not have parameter {param}")
+        elif raise_error_if_not_exists:
+            raise AttributeError(f"{plot_name} plot does not have parameter {param}")
 
     def _set_global_param_for_plots(self, global_params: Dict[str, Any]) -> None:
         """set the global parameters for all plots, used for 'from_dict' constructor"""
         all_plot_names = vars(self).keys()
         valid_global_params = vars(self.plot).keys()
         for param, val in global_params.items():
-            # set the parameter to the specified value for each plot that
-            # has this parameter
             if param not in valid_global_params:
                 raise AttributeError(f"{param} is not a global parameter")
-            else:
-                # ngroups applies to "bars" and "slices" for the bar and pie charts
-                if param == "ngroups":
-                    setattr(getattr(self, "bar"), "bars", val)
-                    setattr(getattr(self, "pie"), "slices", val)
-                for plot_name in all_plot_names:
-                    self._set_param_for_plot(plot_name, param, val, raise_error_if_not_exists=False)
+            # ngroups applies to "bars" and "slices" for the bar and pie charts
+            if param == "ngroups":
+                setattr(getattr(self, "bar"), "bars", val)
+                setattr(getattr(self, "pie"), "slices", val)
+            for plot_name in all_plot_names:
+                self._set_param_for_plot(plot_name, param, val, raise_error_if_not_exists=False)
 
     def _set_local_param_for_plots(self, local_params: Dict[str, Any]) -> None:
         """set the local parameters for all plots, used for 'from_dict' constructor"""

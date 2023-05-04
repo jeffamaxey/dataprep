@@ -133,10 +133,11 @@ def validate_al_nipt(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nipt.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nipt.is_valid)
-        else:
-            return df.applymap(nipt.is_valid)
+        return (
+            df[column].apply(nipt.is_valid)
+            if column
+            else df.applymap(nipt.is_valid)
+        )
     return nipt.is_valid(df)
 
 
@@ -166,6 +167,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [nipt.compact(val)] + result
-
-    return result
+    return [nipt.compact(val)] + result

@@ -21,7 +21,7 @@ from distutils.version import StrictVersion
 lib = os.path.expanduser("~/.poetry/lib")
 vendors = os.path.join(lib, "poetry", "_vendor")
 current_vendors = os.path.join(
-    vendors, "py{}".format(".".join(str(v) for v in sys.version_info[:2]))
+    vendors, f'py{".".join(str(v) for v in sys.version_info[:2])}'
 )
 
 sys.path.insert(0, lib)
@@ -31,11 +31,11 @@ try:
     try:
         from poetry.core.factory import Factory
         from poetry.core.masonry.builders.sdist import SdistBuilder
-    except (ImportError, ModuleNotFoundError):
+    except ImportError:
         from poetry.masonry.builders.sdist import SdistBuilder
         from poetry.factory import Factory
     from poetry.__version__ import __version__
-except (ImportError, ModuleNotFoundError) as ee:
+except ImportError as ee:
     raise ImportError("install poetry by doing pip install poetry to use " f"this script: {ee}")
 
 

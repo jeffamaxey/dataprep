@@ -43,12 +43,11 @@ class Template:
         }
         for key, value in pagination_configs.items():
             page_scope["dataTableConfig"][key] = value
-        page_scope.update(page_data.getScope())
+        page_scope |= page_data.getScope()
         html_template = pystache.render(page_template, page_scope)
 
-        file = open(output_file, "w", encoding="utf-8")
-        file.write(html_template)
-        file.close()
+        with open(output_file, "w", encoding="utf-8") as file:
+            file.write(html_template)
         contents = open(output_file, "r", encoding="utf-8")
         fill = contents.read()
 

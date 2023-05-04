@@ -122,10 +122,7 @@ def validate_do_rnc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(rnc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(rnc.is_valid)
-        else:
-            return df.applymap(rnc.is_valid)
+        return df[column].apply(rnc.is_valid) if column else df.applymap(rnc.is_valid)
     return rnc.is_valid(df)
 
 

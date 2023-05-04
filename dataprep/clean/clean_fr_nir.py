@@ -123,10 +123,7 @@ def validate_fr_nir(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nir.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nir.is_valid)
-        else:
-            return df.applymap(nir.is_valid)
+        return df[column].apply(nir.is_valid) if column else df.applymap(nir.is_valid)
     return nir.is_valid(df)
 
 

@@ -69,7 +69,11 @@ def clean_text(
     """
     df = to_dask(df)
 
-    pipe = _get_default_pipeline(stopwords) if not pipeline else _get_custom_pipeline(pipeline)
+    pipe = (
+        _get_custom_pipeline(pipeline)
+        if pipeline
+        else _get_default_pipeline(stopwords)
+    )
 
     for func in pipe:
         df[column] = df[column].apply(func, meta=object)
@@ -303,7 +307,7 @@ def _remove_stopwords(text: Any, stopwords: Optional[Set[str]] = None) -> Any:
     if pd.isna(text):
         return text
 
-    stopwords = english_stopwords if not stopwords else stopwords
+    stopwords = stopwords if stopwords else english_stopwords
     return " ".join(word for word in str(text).split() if word.lower() not in stopwords)
 
 
@@ -404,7 +408,7 @@ def _replace_stopwords(text: Any, value: str, stopwords: Optional[Set[str]] = No
     if pd.isna(text):
         return text
 
-    stopwords = english_stopwords if not stopwords else stopwords
+    stopwords = stopwords if stopwords else english_stopwords
     return " ".join(word if word.lower() not in stopwords else value for word in str(text).split())
 
 

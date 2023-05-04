@@ -123,10 +123,11 @@ def validate_ro_onrc(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(onrc.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(onrc.is_valid)
-        else:
-            return df.applymap(onrc.is_valid)
+        return (
+            df[column].apply(onrc.is_valid)
+            if column
+            else df.applymap(onrc.is_valid)
+        )
     return onrc.is_valid(df)
 
 

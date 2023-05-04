@@ -122,10 +122,7 @@ def validate_nz_ird(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ird.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ird.is_valid)
-        else:
-            return df.applymap(ird.is_valid)
+        return df[column].apply(ird.is_valid) if column else df.applymap(ird.is_valid)
     return ird.is_valid(df)
 
 

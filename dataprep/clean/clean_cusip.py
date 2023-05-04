@@ -131,10 +131,11 @@ def validate_cusip(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cusip.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cusip.is_valid)
-        else:
-            return df.applymap(cusip.is_valid)
+        return (
+            df[column].apply(cusip.is_valid)
+            if column
+            else df.applymap(cusip.is_valid)
+        )
     return cusip.is_valid(df)
 
 
@@ -164,7 +165,7 @@ def _format(
             raise ValueError(f"Unable to parse value {val}")
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
-    if output_format in ("compact", "standard"):
+    if output_format in {"compact", "standard"}:
         result = [cusip.compact(val)] + result
     elif output_format == "isin":
         result = [cusip.to_isin(val)] + result

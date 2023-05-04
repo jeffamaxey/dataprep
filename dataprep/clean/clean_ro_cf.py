@@ -123,10 +123,7 @@ def validate_ro_cf(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cf.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cf.is_valid)
-        else:
-            return df.applymap(cf.is_valid)
+        return df[column].apply(cf.is_valid) if column else df.applymap(cf.is_valid)
     return cf.is_valid(df)
 
 

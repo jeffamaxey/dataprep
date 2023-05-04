@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_dates() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "date": [
                 "1996.07.10 AD at 15:08:56 PDT",
@@ -58,12 +58,11 @@ def df_dates() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 @pytest.fixture(scope="module")  # type: ignore
 def df_messy_date() -> pd.DataFrame:
-    df = pd.DataFrame(
+    return pd.DataFrame(
         {
             "messy_date": [
                 "T, Ap 12, 1952 AD 3:30:42p",
@@ -82,7 +81,6 @@ def df_messy_date() -> pd.DataFrame:
             ]
         }
     )
-    return df
 
 
 def test_clean_default(df_dates: pd.DataFrame) -> None:

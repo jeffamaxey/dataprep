@@ -123,10 +123,7 @@ def validate_il_hp(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(hp.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(hp.is_valid)
-        else:
-            return df.applymap(hp.is_valid)
+        return df[column].apply(hp.is_valid) if column else df.applymap(hp.is_valid)
     return hp.is_valid(df)
 
 

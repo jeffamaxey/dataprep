@@ -125,10 +125,7 @@ def validate_mu_nid(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nid.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nid.is_valid)
-        else:
-            return df.applymap(nid.is_valid)
+        return df[column].apply(nid.is_valid) if column else df.applymap(nid.is_valid)
     return nid.is_valid(df)
 
 

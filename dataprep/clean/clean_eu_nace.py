@@ -125,10 +125,11 @@ def validate_eu_nace(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nace.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nace.is_valid)
-        else:
-            return df.applymap(nace.is_valid)
+        return (
+            df[column].apply(nace.is_valid)
+            if column
+            else df.applymap(nace.is_valid)
+        )
     return nace.is_valid(df)
 
 

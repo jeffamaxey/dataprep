@@ -283,11 +283,10 @@ class ParsedDate:
                     self.ymd["day"] = day
                 else:
                     self.valid = "unknown"
+            elif 1 <= day <= 28:
+                self.ymd["day"] = day
             else:
-                if 1 <= day <= 28:
-                    self.ymd["day"] = day
-                else:
-                    self.valid = "unknown"
+                self.valid = "unknown"
         else:
             self.valid = "unknown"
 
@@ -380,10 +379,7 @@ class ParsedDate:
         This function judge if year is leap year
         """
         if self.ymd["year"] % 4 == 0:
-            if self.ymd["year"] % 100 == 0:
-                return self.ymd["year"] % 400 == 0
-            else:
-                return True
+            return self.ymd["year"] % 400 == 0 if self.ymd["year"] % 100 == 0 else True
         return False
 
 
@@ -585,8 +581,11 @@ def split(txt: str, seps: List[str]) -> List[str]:
     default_sep = seps[0]
     for sep in seps[1:]:
         txt = txt.replace(sep, default_sep)
-    result = [value for value in [i.strip() for i in txt.split(default_sep)] if value != ""]
-    return result
+    return [
+        value
+        for value in [i.strip() for i in txt.split(default_sep)]
+        if value != ""
+    ]
 
 
 def check_date(date: str, clean: bool) -> Union[str, bool]:
@@ -606,7 +605,7 @@ def check_date(date: str, clean: bool) -> Union[str, bool]:
     """
     if date in NULL_VALUES:
         return "null" if clean else False
-    date = str(date)
+    date = date
     tokens = split(date, JUMP)
     remain_tokens = tokens.copy()
 

@@ -29,10 +29,7 @@ class ConstantImputer:
         """
 
         self.null_values = null_values
-        if len(fill_value) == "":
-            self.fill_value = "Missing"
-        else:
-            self.fill_value = fill_value
+        self.fill_value = "Missing" if len(fill_value) == "" else fill_value
 
     def fit(self, col_df: dd.Series) -> Any:
         """
@@ -56,8 +53,7 @@ class ConstantImputer:
             Provided data column.
         """
 
-        result = col_df.map(self.fillna)
-        return result
+        return col_df.map(self.fillna)
 
     def fit_transform(self, col_df: dd.Series) -> dd.Series:
         """
@@ -84,7 +80,6 @@ class ConstantImputer:
             Each value in dask's Series
         """
 
-        if not self.null_values is None:
-            if val in self.null_values:
-                return self.fill_value
+        if self.null_values is not None and val in self.null_values:
+            return self.fill_value
         return val

@@ -144,11 +144,7 @@ def clean_date(
     df = to_dask(df)
 
     is_day_first = None
-    if infer_day_first:
-        is_day_first = _is_day_first(df[column])
-    else:
-        is_day_first = False
-
+    is_day_first = _is_day_first(df[column]) if infer_day_first else False
     # To clean, create a new column "clean_code_tup" which contains
     # the cleaned values and code indicating how the initial value was
     # changed in a tuple. Then split the column of tuples and count the
@@ -237,13 +233,10 @@ def _check_is_day_first(val: Any) -> Optional[bool]:
     date = str(val)
     is_day_first = None
     status = check_date(date, True)
-    if status == "null":
+    if status in ["null", "unknown"]:
         return is_day_first
-    elif status == "unknown":
-        return is_day_first
-    else:
-        tokens = split(date, JUMP)
-        _, _, is_day_first = _ensure_ymd(tokens, None)
+    tokens = split(date, JUMP)
+    _, _, is_day_first = _ensure_ymd(tokens, None)
     return is_day_first
 
 
@@ -282,21 +275,20 @@ def _format_date(
         parsed_output_format_data = _set_parsedtargetformat_timezone_offset(
             output_timezone, parsed_output_format_data
         )
-        if parsed_output_format_data.valid:
-            if parsed_date_data.valid == "cleaned":
-                transformed_date = _transform(
-                    parsed_date_data, parsed_output_format_data, output_format, output_timezone
-                )
-                return transformed_date, 2 if val != transformed_date else 3
-            else:
-                if errors == "raise":
-                    raise ValueError(f"unable to parse value {val}")
-                return val if errors == "ignore" else np.nan, 1
-        else:
+        if not parsed_output_format_data.valid:
             raise ValueError(
                 f"output_format {output_format} is invalid. "
                 f"Invalid tokens are {parsed_output_format_data.invalid_tokens}."
             )
+        if parsed_date_data.valid == "cleaned":
+            transformed_date = _transform(
+                parsed_date_data, parsed_output_format_data, output_format, output_timezone
+            )
+            return transformed_date, 2 if val != transformed_date else 3
+        else:
+            if errors == "raise":
+                raise ValueError(f"unable to parse value {val}")
+            return val if errors == "ignore" else np.nan, 1
 
 
 def _set_parseddate_timezone_offset(timezone: str, parsed_data: ParsedDate) -> ParsedDate:
@@ -328,7 +320,7 @@ def _set_parseddate_timezone_offset(timezone: str, parsed_data: ParsedDate) -> P
         parsed_data.set_tzinfo(utc_offset_hours=abs(ZONE[timezone]), utc_offset_minutes=0)
         if ZONE[timezone] >= 0:
             parsed_data.set_tzinfo(utc_add="+")
-        elif ZONE[timezone] < 0:
+        else:
             parsed_data.set_tzinfo(utc_add="-")
     return parsed_data
 
@@ -365,7 +357,7 @@ def _set_parsedtargetformat_timezone_offset(
         parsed_data.set_tzinfo(utc_offset_minutes=0)
         if ZONE[timezone] >= 0:
             parsed_data.set_tzinfo(utc_add="+")
-        elif ZONE[timezone] < 0:
+        else:
             parsed_data.set_tzinfo(utc_add="-")
     return parsed_data
 
@@ -493,14 +485,14 @@ def _figure_output_format_hms(
     remain_tokens
         remained tokens after figuring tokens
     """
-    if len(remain_tokens) > 0:
+    if remain_tokens:
         remain_str = ""
         for token in remain_tokens:
             if (
-                not token in TARGET_MONTH
-                and not token in TARGET_WEEKDAY
-                and not token in AM
-                and not token in PM
+                token not in TARGET_MONTH
+                and token not in TARGET_WEEKDAY
+                and token not in AM
+                and token not in PM
             ):
                 remain_str = token
         parsed_data, hms_tokens = _get_output_format_hms_tokens(parsed_data, remain_str)
@@ -565,11 +557,8 @@ def _ensure_ymd(
     result = ParsedDate()
     result, remain_tokens = _ensure_year(result, tokes, deepcopy(tokes))
     if len(remain_tokens) == 0:
-        return result, remain_tokens, not is_day_first is None
-    num_tokens = []
-    for token in remain_tokens:
-        if token.isnumeric():
-            num_tokens.append(token)
+        return result, remain_tokens, is_day_first is not None
+    num_tokens = [token for token in remain_tokens if token.isnumeric()]
     for token in num_tokens:
         remain_tokens.remove(token)
     if result.ymd["year"] != -1:
@@ -625,34 +614,32 @@ def _ensure_month_day(
         signal of inferring result.
     """
     if len(num_tokens) == 1:
-        if parsed_data.ymd["month"] != -1:
-            parsed_data.set_day(int(num_tokens[0]))
-        else:
+        if parsed_data.ymd["month"] == -1:
             parsed_data.set_month(int(num_tokens[0]))
+        else:
+            parsed_data.set_day(int(num_tokens[0]))
         if is_day_first is None:
             is_day_first = False
+    elif int(num_tokens[0]) > 12:
+        parsed_data.set_month(int(num_tokens[1]))
+        parsed_data.set_day(int(num_tokens[0]))
+        if is_day_first is None:
+            is_day_first = True
+    elif int(num_tokens[1]) > 12:
+        parsed_data.set_month(int(num_tokens[0]))
+        parsed_data.set_day(int(num_tokens[1]))
+        if is_day_first is None:
+            is_day_first = False
+    elif is_day_first is None:
+        is_day_first = False
+        parsed_data.set_month(int(num_tokens[0]))
+        parsed_data.set_day(int(num_tokens[1]))
+    elif is_day_first:
+        parsed_data.set_month(int(num_tokens[1]))
+        parsed_data.set_day(int(num_tokens[0]))
     else:
-        if int(num_tokens[0]) > 12:
-            parsed_data.set_month(int(num_tokens[1]))
-            parsed_data.set_day(int(num_tokens[0]))
-            if is_day_first is None:
-                is_day_first = True
-        elif int(num_tokens[1]) > 12:
-            parsed_data.set_month(int(num_tokens[0]))
-            parsed_data.set_day(int(num_tokens[1]))
-            if is_day_first is None:
-                is_day_first = False
-        else:
-            if is_day_first is None:
-                is_day_first = False
-                parsed_data.set_month(int(num_tokens[0]))
-                parsed_data.set_day(int(num_tokens[1]))
-            elif is_day_first:
-                parsed_data.set_month(int(num_tokens[1]))
-                parsed_data.set_day(int(num_tokens[0]))
-            elif not is_day_first:
-                parsed_data.set_month(int(num_tokens[0]))
-                parsed_data.set_day(int(num_tokens[1]))
+        parsed_data.set_month(int(num_tokens[0]))
+        parsed_data.set_day(int(num_tokens[1]))
     return parsed_data, is_day_first
 
 
@@ -695,17 +682,16 @@ def _ensure_year_month_day(
             parsed_data.set_day(int(num_tokens[1]))
             if is_day_first is None:
                 is_day_first = False
+        elif is_day_first is None:
+            is_day_first = False
+            parsed_data.set_month(int(num_tokens[0]))
+            parsed_data.set_day(int(num_tokens[1]))
+        elif is_day_first:
+            parsed_data.set_month(int(num_tokens[1]))
+            parsed_data.set_day(int(num_tokens[0]))
         else:
-            if is_day_first is None:
-                is_day_first = False
-                parsed_data.set_month(int(num_tokens[0]))
-                parsed_data.set_day(int(num_tokens[1]))
-            elif is_day_first:
-                parsed_data.set_month(int(num_tokens[1]))
-                parsed_data.set_day(int(num_tokens[0]))
-            elif not is_day_first:
-                parsed_data.set_month(int(num_tokens[0]))
-                parsed_data.set_day(int(num_tokens[1]))
+            parsed_data.set_month(int(num_tokens[0]))
+            parsed_data.set_day(int(num_tokens[1]))
     return parsed_data, is_day_first
 
 
@@ -721,13 +707,11 @@ def _ensure_hms(inner_result: ParsedDate, remain_tokens: List[str]) -> ParsedDat
     """
     result = deepcopy(inner_result)
     remain_str = remain_tokens[0]
-    hms_tokens = []
     # Judge the expression of am pm
     ispm = False
-    for token in AM:
-        if token in remain_str:
-            hms_tokens = split(remain_str, AM)
-            break
+    hms_tokens = next(
+        (split(remain_str, AM) for token in AM if token in remain_str), []
+    )
     for token in PM:
         if token in remain_str:
             ispm = True
@@ -806,8 +790,7 @@ def _parse(date: str, fix_missing: str, is_day_first: Optional[bool]) -> ParsedD
         parsed_time_res = _ensure_hms(parsed_date_res, remain_tokens)
     else:
         parsed_time_res = parsed_date_res
-    parsed_res = _fix_missing_element(parsed_time_res, fix_missing)
-    return parsed_res
+    return _fix_missing_element(parsed_time_res, fix_missing)
 
 
 def _change_timezone(parsed_date_data: ParsedDate, output_timezone: str) -> ParsedDate:
@@ -833,7 +816,7 @@ def _change_timezone(parsed_date_data: ParsedDate, output_timezone: str) -> Pars
     origin_add, target_add = 0, 0
     if parsed_date_data.tzinfo["timezone"] in all_timezones:
         pytz_offset = pytz.timezone(str(parsed_date_data.tzinfo["timezone"])).utcoffset(origin_date)
-        if not pytz_offset is None:
+        if pytz_offset is not None:
             origin_add = -1 if pytz_offset.days > 0 and pytz_offset.seconds > 0 else 1
             origin_tz_offset = timedelta(
                 days=abs(pytz_offset.days), seconds=abs(pytz_offset.seconds)
@@ -844,7 +827,7 @@ def _change_timezone(parsed_date_data: ParsedDate, output_timezone: str) -> Pars
         origin_tz_offset = timedelta(days=0, seconds=offset_value)
     if output_timezone in all_timezones:
         pytz_offset = pytz.timezone(output_timezone).utcoffset(origin_date)
-        if not pytz_offset is None:
+        if pytz_offset is not None:
             target_add = 1 if pytz_offset.days >= 0 and pytz_offset.seconds >= 0 else -1
             target_tz_offset = timedelta(
                 days=abs(pytz_offset.days), seconds=abs(pytz_offset.seconds)
@@ -878,7 +861,7 @@ def _change_timezone(parsed_date_data: ParsedDate, output_timezone: str) -> Pars
     result.set_tzinfo(utc_offset_minutes=int((abs(seconds) - (abs(seconds) / 3600) * 3600) / 60))
     if target_add >= 0:
         result.set_tzinfo(utc_add="+")
-    elif target_add < 0:
+    else:
         result.set_tzinfo(utc_add="-")
     return result
 
@@ -904,15 +887,15 @@ def _transform_year(result_str: str, year_token: str, year: int) -> str:
                 result = result.replace(year_token, "--")
             elif len(year_token) == 1:
                 result = result.replace(year_token, "-")
+        elif len(year_token) == 4:
+            result = result.replace(year_token, str(year))
         else:
-            if len(year_token) == 4:
-                result = result.replace(year_token, str(year))
-            else:
-                year = year - 2000
-                if year < 10:
-                    result = result.replace(year_token, f"{0}{year}")
-                else:
-                    result = result.replace(year_token, str(year))
+            year -= 2000
+            result = (
+                result.replace(year_token, f"0{year}")
+                if year < 10
+                else result.replace(year_token, str(year))
+            )
     return result
 
 
@@ -939,18 +922,14 @@ def _transform_month(result_str: str, month_token: str, month: int) -> str:
                 result = result.replace(month_token, "--")
             elif len(month_token) == 1:
                 result = result.replace(month_token, "-")
+        elif len(month_token) == 2 and month < 10:
+            result = result.replace(month_token, f"0{month}", 1)
+        elif len(month_token) == 2 or len(month_token) not in [3, 5]:
+            result = result.replace(month_token, str(month), 1)
+        elif len(month_token) == 3:
+            result = result.replace(month_token, TEXT_MONTHS[month - 1][0], 1)
         else:
-            if len(month_token) == 2:
-                if month < 10:
-                    result = result.replace(month_token, f"{0}{month}", 1)
-                else:
-                    result = result.replace(month_token, str(month), 1)
-            elif len(month_token) == 3:
-                result = result.replace(month_token, TEXT_MONTHS[month - 1][0], 1)
-            elif len(month_token) == 5:
-                result = result.replace(month_token, TEXT_MONTHS[month - 1][1], 1)
-            else:
-                result = result.replace(month_token, str(month), 1)
+            result = result.replace(month_token, TEXT_MONTHS[month - 1][1], 1)
     return result
 
 
@@ -973,14 +952,14 @@ def _transform_day(result_str: str, day_token: str, day: int) -> str:
                 result = result.replace(day_token, "--")
             elif len(day_token) == 1:
                 result = result.replace(day_token, "-")
+        elif len(day_token) == 2:
+            result = (
+                result.replace(day_token, f"0{day}", 1)
+                if day < 10
+                else result.replace(day_token, str(day), 1)
+            )
         else:
-            if len(day_token) == 2:
-                if day < 10:
-                    result = result.replace(day_token, f"{0}{day}", 1)
-                else:
-                    result = result.replace(day_token, str(day), 1)
-            else:
-                result = result.replace(day_token, str(day))
+            result = result.replace(day_token, str(day))
     return result
 
 
@@ -1005,12 +984,13 @@ def _transform_hms(result_str: str, hms_token: str, ispm: bool, hms_value: int) 
                 result = result.replace(hms_token, "-")
         else:
             if ispm:
-                hms_value = hms_value - 12
+                hms_value -= 12
             if len(hms_token) == 2:
-                if hms_value < 10:
-                    result = result.replace(hms_token, f"{0}{hms_value}", 1)
-                else:
-                    result = result.replace(hms_token, str(hms_value), 1)
+                result = (
+                    result.replace(hms_token, f"0{hms_value}", 1)
+                    if hms_value < 10
+                    else result.replace(hms_token, str(hms_value), 1)
+                )
             else:
                 result = result.replace(hms_token, str(hms_value))
     return result
@@ -1035,11 +1015,10 @@ def _transform_weekday(result_str: str, weekday_token: str, weekday: int) -> str
                 result = result.replace(weekday_token, "---")
             elif len(weekday_token) == 5:
                 result = result.replace(weekday_token, "-----")
-        else:
-            if len(weekday_token) == 3:
-                result = result.replace(weekday_token, TEXT_WEEKDAYS[weekday - 1][0])
-            elif len(weekday_token) == 5:
-                result = result.replace(weekday_token, TEXT_WEEKDAYS[weekday - 1][1])
+        elif len(weekday_token) == 3:
+            result = result.replace(weekday_token, TEXT_WEEKDAYS[weekday - 1][0])
+        elif len(weekday_token) == 5:
+            result = result.replace(weekday_token, TEXT_WEEKDAYS[weekday - 1][1])
     return result
 
 
@@ -1066,19 +1045,18 @@ def _transform_timezone(
     """
     # pylint: disable=too-many-arguments
     result = deepcopy(result_str)
-    if timezone_token != "":
-        if timezone_token == "z":
-            result = result.replace(timezone_token, timezone)
-        elif timezone_token == "Z":
-            offset_hours_str = str(int(utc_offset_hours))
-            if len(offset_hours_str) == 1:
-                offset_hours_str = f"{0}{offset_hours_str}"
-            offset_minutes_str = str(int(utc_offset_minutes))
-            if len(offset_minutes_str) == 1:
-                offset_minutes_str = f"{0}{offset_minutes_str}"
-            result = result.replace(
-                timezone_token, f"UTC{utc_add}{offset_hours_str}:{offset_minutes_str}"
-            )
+    if timezone_token == "Z":
+        offset_hours_str = str(utc_offset_hours)
+        if len(offset_hours_str) == 1:
+            offset_hours_str = f"0{offset_hours_str}"
+        offset_minutes_str = str(utc_offset_minutes)
+        if len(offset_minutes_str) == 1:
+            offset_minutes_str = f"0{offset_minutes_str}"
+        result = result.replace(
+            timezone_token, f"UTC{utc_add}{offset_hours_str}:{offset_minutes_str}"
+        )
+    elif timezone_token == "z":
+        result = result.replace(timezone_token, timezone)
     return result
 
 

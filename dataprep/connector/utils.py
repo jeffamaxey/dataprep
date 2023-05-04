@@ -36,9 +36,7 @@ class Request:
         conn = http.client.HTTPSConnection(self.hostname)
 
         conn.request(method="GET", url=self.path, headers=self.headers)
-        response = conn.getresponse()
-
-        return response
+        return conn.getresponse()
 
     def post(
         self, _headers: Optional[Dict[str, Any]] = None, _data: Optional[Dict[str, Any]] = None
@@ -63,9 +61,7 @@ class Request:
             )
         else:
             conn.request(method="POST", url=self.path, headers=self.headers)
-        response = conn.getresponse()
-
-        return response
+        return conn.getresponse()
 
     def put(
         self, _headers: Optional[Dict[str, Any]] = None, _data: Optional[Dict[str, Any]] = None
@@ -90,6 +86,4 @@ class Request:
             )
         else:
             conn.request(method="PUT", url=self.path, headers=self.headers)
-        response = conn.getresponse()
-
-        return response
+        return conn.getresponse()

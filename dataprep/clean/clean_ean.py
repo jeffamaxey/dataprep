@@ -133,10 +133,7 @@ def validate_ean(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(ean.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(ean.is_valid)
-        else:
-            return df.applymap(ean.is_valid)
+        return df[column].apply(ean.is_valid) if column else df.applymap(ean.is_valid)
     return ean.is_valid(df)
 
 
@@ -166,6 +163,4 @@ def _format(
         error_result = val if errors == "ignore" else np.nan
         return [error_result]
 
-    result = [ean.compact(val)] + result
-
-    return result
+    return [ean.compact(val)] + result

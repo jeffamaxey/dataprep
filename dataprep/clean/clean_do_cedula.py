@@ -122,10 +122,11 @@ def validate_do_cedula(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(cedula.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(cedula.is_valid)
-        else:
-            return df.applymap(cedula.is_valid)
+        return (
+            df[column].apply(cedula.is_valid)
+            if column
+            else df.applymap(cedula.is_valid)
+        )
     return cedula.is_valid(df)
 
 

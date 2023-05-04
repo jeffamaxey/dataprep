@@ -76,10 +76,11 @@ def preprocess_dataframe(
         # Process the case when used_columns are string column name,
         # but org_df column name is object.
         used_columns_set = set(used_columns)
-        used_cols_obj = set()
-        for col in org_df.columns:
-            if str(col) in used_columns_set or col in used_columns_set:
-                used_cols_obj.add(col)
+        used_cols_obj = {
+            col
+            for col in org_df.columns
+            if str(col) in used_columns_set or col in used_columns_set
+        }
         df = org_df[used_cols_obj]
 
     columns = list(df.columns)
@@ -150,17 +151,13 @@ def cut_long_name(name: str, max_len: int = 18) -> str:
     cut it to `max_len` length and append "..."""
 
     # Bug 136 Fixed
-    name = str(name)
-    cut_name = f"{name[:13]}...{name[len(name)-3:]}" if len(name) > max_len else name
-    return cut_name
+    name = name
+    return f"{name[:13]}...{name[len(name)-3:]}" if len(name) > max_len else name
 
 
 def fuse_missing_perc(name: str, perc: float) -> str:
     """Append (x.y%) to the name if `perc` is not 0."""
-    if perc == 0:
-        return name
-
-    return f"{name} ({perc:.1%})"
+    return name if perc == 0 else f"{name} ({perc:.1%})"
 
 
 # Dictionary for mapping the time unit to its formatting. Each entry is of the
@@ -211,7 +208,7 @@ def _calc_box_stats(grp_srs: dd.Series, grp: str, dlyd: bool = False) -> pd.Data
     Auxiliary function to calculate the Tukey box plot statistics
     dlyd is for if this function is called when dask is computing in parallel (dask.delayed)
     """
-    stats: Dict[str, Any] = dict()
+    stats: Dict[str, Any] = {}
 
     try:  # this is a bad fix for the problem of when there is no data passed to this function
         if dlyd:
@@ -293,8 +290,8 @@ def _calc_line_dt(
 
     # multiline charts
     if ngroups and largest:
-        hist_dict: Dict[str, Tuple[np.ndarray, np.ndarray, List[str]]] = dict()
-        hist_lst: List[Tuple[np.ndarray, np.ndarray, List[str]]] = list()
+        hist_dict: Dict[str, Tuple[np.ndarray, np.ndarray, List[str]]] = {}
+        hist_lst: List[Tuple[np.ndarray, np.ndarray, List[str]]] = []
         agg = "freq" if agg is None else agg  # default agg if unspecified for notational concision
 
         # categorical column for grouping over, each resulting group is a line in the chart
@@ -362,7 +359,7 @@ def _calc_groups(
     """
 
     # group count statistics to inform the user of the sampled output
-    grp_cnt_stats: Dict[str, int] = dict()
+    grp_cnt_stats: Dict[str, int] = {}
 
     srs = df.groupby(x).size()
     srs_lrgst = srs.nlargest(n=ngroups) if largest else srs.nsmallest(n=ngroups)
@@ -462,13 +459,13 @@ def _format_ticks(ticks: List[float]) -> List[str]:
         value = np.round(float(before) * factor, len(str(before)))
         value = int(value) if value.is_integer() else value
         if abs(tick) >= 1e12:
-            formatted_ticks.append(str(value) + "T")
+            formatted_ticks.append(f"{str(value)}T")
         elif abs(tick) >= 1e9:
-            formatted_ticks.append(str(value) + "B")
+            formatted_ticks.append(f"{str(value)}B")
         elif abs(tick) >= 1e6:
-            formatted_ticks.append(str(value) + "M")
+            formatted_ticks.append(f"{str(value)}M")
         elif abs(tick) >= 1e4:
-            formatted_ticks.append(str(value) + "K")
+            formatted_ticks.append(f"{str(value)}K")
 
     return formatted_ticks
 
@@ -481,10 +478,7 @@ def _format_axis(fig: Figure, minv: int, maxv: int, axis: str) -> None:
     # divisor for 5 ticks (5 results in ticks that are too close together)
     divisor = 4.5
     # interval
-    if np.isinf(minv) or np.isinf(maxv):
-        gap = 1.0
-    else:
-        gap = (maxv - minv) / divisor
+    gap = 1.0 if np.isinf(minv) or np.isinf(maxv) else (maxv - minv) / divisor
     # get exponent from scientific notation
     _, after = f"{gap:.0e}".split("e")
     # round to this amount

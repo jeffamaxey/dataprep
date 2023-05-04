@@ -123,10 +123,7 @@ def validate_gb_nhs(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(nhs.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(nhs.is_valid)
-        else:
-            return df.applymap(nhs.is_valid)
+        return df[column].apply(nhs.is_valid) if column else df.applymap(nhs.is_valid)
     return nhs.is_valid(df)
 
 

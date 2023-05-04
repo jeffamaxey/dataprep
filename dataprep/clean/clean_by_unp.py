@@ -125,10 +125,7 @@ def validate_by_unp(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(unp.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(unp.is_valid)
-        else:
-            return df.applymap(unp.is_valid)
+        return df[column].apply(unp.is_valid) if column else df.applymap(unp.is_valid)
     return unp.is_valid(df)
 
 

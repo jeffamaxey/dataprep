@@ -123,10 +123,7 @@ def validate_cz_dic(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(dic.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(dic.is_valid)
-        else:
-            return df.applymap(dic.is_valid)
+        return df[column].apply(dic.is_valid) if column else df.applymap(dic.is_valid)
     return dic.is_valid(df)
 
 

@@ -123,10 +123,7 @@ def validate_is_vsk(
     if isinstance(df, (pd.Series, dd.Series)):
         return df.apply(vsk.is_valid)
     elif isinstance(df, (pd.DataFrame, dd.DataFrame)):
-        if column != "":
-            return df[column].apply(vsk.is_valid)
-        else:
-            return df.applymap(vsk.is_valid)
+        return df[column].apply(vsk.is_valid) if column else df.applymap(vsk.is_valid)
     return vsk.is_valid(df)
 
 

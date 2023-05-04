@@ -31,8 +31,7 @@ with open(f"{FILE_PATH}/oauth2.html", "rb") as f:
 
 def get_random_string(length: int) -> str:
     letters = string.ascii_lowercase
-    result_str = "".join(random.choice(letters) for _ in range(length))
-    return result_str
+    return "".join(random.choice(letters) for _ in range(length))
 
 
 def validate_auth(required: Set[str], passed: Dict[str, Any]) -> None:
@@ -92,7 +91,6 @@ class FieldDef(BaseDef):
     remove_if_empty: bool
 
     @root_validator(pre=True)
-    # pylint: disable=no-self-argument,no-self-use
     def from_key_validation(cls, values: Dict[str, Any]) -> Any:
         if "template" in values:
             parsed_content = Environment().parse(values["template"])
@@ -110,9 +108,8 @@ class FieldDef(BaseDef):
 
             if len(set(variables) - from_key) != 0:
                 raise ValueError(f"template requires {variables} exist in fromKey, got {from_key}")
-        else:
-            if isinstance(values.get("fromKey"), list):
-                raise ValueError("from_key cannot be a list if template is not used.")
+        elif isinstance(values.get("fromKey"), list):
+            raise ValueError("from_key cannot be a list if template is not used.")
 
         return values
 
@@ -389,8 +386,7 @@ class RequestDef(BaseDef):
         ret: Set[str] = set()
 
         for match in re.finditer(r"\{(?P<param>.*?)\}", url):
-            param = match.group("param")
-            if param:
+            if param := match.group("param"):
                 ret.add(param)
 
         return ret - skip

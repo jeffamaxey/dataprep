@@ -40,9 +40,7 @@ def simpledf() -> dd.DataFrame:
     np.random.shuffle(idx)
     df.iloc[idx[:500], 0] = None
 
-    ddf = to_dask(df)
-
-    return ddf
+    return to_dask(df)
 
 
 def test_sanity_compute_mulitple_df(simpledf: dd.DataFrame) -> None:
